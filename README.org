@@ -30,7 +30,7 @@ over the heap. This would allow SPF to avoid a complete enumeration of
 all the possible cases, eliminating the ones violating the data
 structures properties. We want to focus in particular on separation
 logic and see if it brings an improvement compared to the lazy
-initialization or to languages like [1].
+initialization or to languages like [[https://www.researchgate.net/publication/299907212_Symbolic_execution_of_programs_with_heap_inputs][HEX]].
 
 * Building
 #+BEGIN_SRC shell
