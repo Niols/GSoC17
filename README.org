@@ -35,7 +35,7 @@ initialization or to languages like [1].
 * Building
 #+BEGIN_SRC shell
 docker build -t gsoc .
-docker run gsoc jpf-symbc/src/examples/
+docker run gsoc jpf-symbc/src/examples/Assume.jpf
 #+END_SRC
 
 * Other links

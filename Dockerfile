@@ -5,6 +5,7 @@ MAINTAINER Nicolas `Niols` Jeannerod <niols@niols.fr>
 ## Update (DO NOT upgrade) and install necessary packages.
 RUN apt-get update && apt-get install -y \
         openjdk-8-jdk-headless openjdk-8-jre-headless \
+	libz3-java \
 	mercurial ant
 
 ## Add all the current directory in the docker image's /root.
