@@ -2,20 +2,21 @@ FROM ubuntu:16.04
 
 MAINTAINER Nicolas `Niols` Jeannerod <niols@niols.fr>
 
-ADD . /root
+## Update (DO NOT upgrade) and install necessary packages.
+RUN apt-get update && apt-get install -y \
+        openjdk-8-jdk-headless openjdk-8-jre-headless \
+	mercurial ant
 
-RUN apt-get update && apt-get upgrade -y
+## Add all the current directory in the docker image's /root.
+COPY . /root
 
-## Install necessary stuff to build and run JPF
-RUN apt-get install -y openjdk-8-jdk-headless openjdk-8-jre-headless mercurial ant
-
-## Get and build JPF-core
+## Get and build JPF-core.
 RUN cd /root/jpf-core && ant build
 
-## GET and build JPF-symbc
+## GET and build JPF-symbc.
 RUN cd /root/jpf-symbc && ant build
 
-## Prepare for interactive mode
+## Prepare for interactive mode.
 WORKDIR /root
 ENTRYPOINT ["java", "-jar", "/root/jpf-core/build/RunJPF.jar", "+jpf-home=/root", "+jpf-core=/root/jpf-core", "+jpf-symbc=/root/jpf-symbc", "+extensions=${jpf-core},${jpf-symbc}"]
 CMD []
