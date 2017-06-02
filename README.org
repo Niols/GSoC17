@@ -1,0 +1,42 @@
+#+TITLE: Verification and Testing of Heap-based Programs with Symbolic PathFinder
+#+AUTHOR: Nicolas `Niols` Jeannerod <niols@niols.fr>
+
+#+STARTUP: indent
+
+This is the repository for my contribution to Google's Summer of
+Code 2017.
+
+* Project description
+- Link :: [[https://summerofcode.withgoogle.com/projects/#5306561080590336]]
+- Student :: Nicolas Jeannerod
+- Project Name :: Verification and Testing of Heap-based Programs with Symbolic PathFinder
+- Organization :: The Java Pathfinder Team
+- Mentors ::
+  - Nikos Gorogiannis
+  - Aymeric Fromherz
+
+Symbolic Pathfinder (SPF) is an open-source symbolic execution tool,
+based on the NASA Java Pathfinder (JPF) model checker, which is used
+in research and industry labs. It executes Java bytecode using a
+custom JVM to perform its analysis.
+
+It currently uses lazy initialization, a brute-force enumeration of
+all heap objects that can bind to the structured inputs accessed by
+the program. This explicit enumeration may lead to a huge amount of
+false alarms.
+
+We propose to explore alternative ways of representing constraints
+over the heap. This would allow SPF to avoid a complete enumeration of
+all the possible cases, eliminating the ones violating the data
+structures properties. We want to focus in particular on separation
+logic and see if it brings an improvement compared to the lazy
+initialization or to languages like [1].
+
+* Building
+#+BEGIN_SRC shell
+docker build -t gsoc .
+docker run gsoc jpf-symbc/src/examples/
+#+END_SRC
+
+* Other links
+- [[file:doc/log-book.org][Log book]]
