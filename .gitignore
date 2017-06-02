@@ -1,0 +1,6 @@
+## /.gitignore
+
+## Globally ignore Emacs' files
+*~
+*#
+*.#*
