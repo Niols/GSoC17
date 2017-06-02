@@ -4,10 +4,11 @@
 
 #+STARTUP: indent
 
-* DONE Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/start][User Guide]]
-- Play a bit with JPF
-- Play a bit with SPF
-* TODO Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/devel/choicegenerator][Developer Guide]]
-* DONE Read the [[../jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/IDIV.java][IDIV]] and [[../jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/ALOAD.java][ALOAD]] classes of SPF
-- Need to better understand the choice generators
-* TODO Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
+* TODO Prerequisites [2/4]
+- [X] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/start][User Guide]]
+  - Play a bit with JPF
+  - Play a bit with SPF
+- [ ] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/devel/choicegenerator][Developer Guide]]
+- [X] Read the [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/IDIV.java][IDIV]] and [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/ALOAD.java][ALOAD]] classes of SPF
+  - Need to better understand the choice generators
+- [ ] Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
