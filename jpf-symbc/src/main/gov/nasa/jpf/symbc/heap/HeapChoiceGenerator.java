@@ -3,16 +3,16 @@
  * Administrator of the National Aeronautics and Space Administration.
  * All rights reserved.
  *
- * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License, 
+ * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
- *        http://www.apache.org/licenses/LICENSE-2.0. 
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0.
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and 
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -36,58 +36,63 @@
 //
 package gov.nasa.jpf.symbc.heap;
 
-
 import gov.nasa.jpf.symbc.numeric.PathCondition;
+import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
 import gov.nasa.jpf.vm.choice.IntIntervalGenerator;
-
 
 public class HeapChoiceGenerator extends IntIntervalGenerator {
 
-	protected PathCondition [] PCheap; // maintains constraints on the heap: one PC per choice
+    protected PathCondition [] PCheap; // maintains constraints on the heap: one PC per choice
+    protected HeapPathCondition [] HPCheap; // maintains heap-specific constraints on the heap; one PC per choice
     protected SymbolicInputHeap [] symInputHeap; // maintains list of input symbolic nodes; one list per choice
 
-	@SuppressWarnings("deprecation")
-	public HeapChoiceGenerator(int size) {
-		super(0, size - 1);
-		PCheap = new PathCondition[size];
-		symInputHeap = new SymbolicInputHeap[size];
-	}
-
-	// sets the heap constraints for the current choice
-	public void setCurrentPCheap(PathCondition pc) {
-		PCheap[getNextChoice()] = pc;
-
-	}
-
-	// returns the heap constraints for the current choice
-	public PathCondition getCurrentPCheap() {
-		PathCondition pc;
-
-		pc = PCheap[getNextChoice()];
-		if (pc != null) {
-			return pc.make_copy();
-		} else {
-			return null;
-		}
-	}
+    @SuppressWarnings("deprecation")
+    public HeapChoiceGenerator(int size) {
+	super(0, size - 1);
+	PCheap = new PathCondition[size];
+	HPCheap = new HeapPathCondition[size];
+	symInputHeap = new SymbolicInputHeap[size];
+    }
 
     // sets the heap constraints for the current choice
-	public void setCurrentSymInputHeap(SymbolicInputHeap ih) {
-		symInputHeap[getNextChoice()] = ih;
+    public void setCurrentPCheap(PathCondition pc) {
+	PCheap[getNextChoice()] = pc;
+    }
 
+    // returns the heap constraints for the current choice
+    public PathCondition getCurrentPCheap() {
+	PathCondition pc;
+
+	pc = PCheap[getNextChoice()];
+	if (pc != null) {
+	    return pc.make_copy();
+	} else {
+	    return null;
 	}
+    }
 
-	// returns the heap constraints for the current choice
-	public SymbolicInputHeap getCurrentSymInputHeap() {
-		SymbolicInputHeap ih;
+    public void setCurrentHPCheap(HeapPathCondition hpc) {
+	HPCheap[getNextChoice()] = hpc;
+    }
 
-		ih = symInputHeap[getNextChoice()];
-		if (ih != null) {
-			return ih.make_copy();
-		} else {
-			return null;
-		}
+    public HeapPathCondition getCurrentHPCheap() {
+	return HPCheap[getNextChoice()];
+    }
+
+    // sets the heap constraints for the current choice
+    public void setCurrentSymInputHeap(SymbolicInputHeap ih) {
+	symInputHeap[getNextChoice()] = ih;
+    }
+
+    // returns the heap constraints for the current choice
+    public SymbolicInputHeap getCurrentSymInputHeap() {
+	SymbolicInputHeap ih;
+
+	ih = symInputHeap[getNextChoice()];
+	if (ih != null) {
+	    return ih.make_copy();
+	} else {
+	    return null;
 	}
-
-
+    }
 }
