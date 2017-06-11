@@ -4,3 +4,7 @@
 *~
 *#
 *.#*
+
+## Specific files
+.hg
+.version
