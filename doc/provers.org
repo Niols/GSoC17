@@ -1,0 +1,28 @@
+#+TITLE: Separation logic provers
+#+AUTHOR: Nicolas `Niols` Jeannerod <niols@niols.fr>
+#+STARTUP: indent
+
+This document references different provers that can handle separation
+logic and prove satisfiability.
+
+Satisfiability can of course always be asked to entailment provers by
+asking if {A} skip {false} and negating the answer. However, this
+might have an impact on the performances.
+
+* Asterix
+
+* CVC4
+- will be extended to support separation logic
+- sep logic writen in SMT libs input. Java support for SMT libs?
+
+* Cyclist
+- full fragment of inductive predicates and symbolic heaps
+- open source
+
+* S2SAT
+- closed source
+
+* smallfoot
+
+* Span
+- SMT libs input

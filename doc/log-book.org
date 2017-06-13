@@ -1,7 +1,6 @@
 #+TITLE: Log Book
 #+AUTHOR: Nicolas `Niols` Jeannerod <niols@niols.fr>
-#+DATE: <2017-06-01 Thu>
-
+#+DATE: <2017-06-13 Tue>
 #+STARTUP: indent
 
 * DONE Prerequisites [4/4]
@@ -23,4 +22,13 @@
 - [ ] Extend the HeapChoiceGenerate to use our HeapPathConstraints
 
 * TODO Real stuff [0/0]
-- [ ] Define a basic language for HeapPathConstraints
+- [ ] Write small test programs
+- [ ] Define the structure of HeapPathCondition s
+- [ ] Define an abstract layout 
+  - pointsTo
+  - star
+- [ ] Plug one prover
+
+* More
+- lists
+- ...
