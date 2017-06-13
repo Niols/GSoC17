@@ -4,11 +4,23 @@
 
 #+STARTUP: indent
 
-* TODO Prerequisites [2/4]
+* DONE Prerequisites [4/4]
 - [X] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/start][User Guide]]
   - Play a bit with JPF
   - Play a bit with SPF
-- [ ] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/devel/choicegenerator][Developer Guide]]
+- [X] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/devel/choicegenerator][Developer Guide]]
 - [X] Read the [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/IDIV.java][IDIV]] and [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/ALOAD.java][ALOAD]] classes of SPF
   - Need to better understand the choice generators
-- [ ] Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
+- [X] Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
+
+* TODO "Administrative" code [0/3]
+- [-] Modify the SymbolicInstructionFactory to accept a
+  *symbolic.seplogic* boolean argument that enables overloading of
+  heap-related JVM instructions:
+  - [X] ALOAD
+  - [ ] …
+- [ ] Define a dummy class for HeapPathConstraints
+- [ ] Extend the HeapChoiceGenerate to use our HeapPathConstraints
+
+* TODO Real stuff [0/0]
+- [ ] Define a basic language for HeapPathConstraints
