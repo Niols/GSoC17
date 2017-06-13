@@ -34,54 +34,33 @@
 // THE SUBJECT SOFTWARE WILL BE ERROR FREE, OR ANY WARRANTY THAT
 // DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
-package gov.nasa.jpf.symbc.heap;
+package gov.nasa.jpf.symbc.heap.seplogic;
 
-import gov.nasa.jpf.symbc.numeric.PathCondition;
+import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
 import gov.nasa.jpf.vm.choice.IntIntervalGenerator;
 
 public class HeapChoiceGenerator extends IntIntervalGenerator {
-
-    protected PathCondition [] PCheap; // maintains constraints on the heap: one PC per choice
-    protected SymbolicInputHeap [] symInputHeap; // maintains list of input symbolic nodes; one list per choice
-
+    /* We use the IntIntervalGenerator to generate array indices. */
+    
+    protected HeapPathCondition [] PC;
+    // maintains heap-specific constraints on the heap; one PC per choice
+    
     @SuppressWarnings("deprecation")
     public HeapChoiceGenerator(int size) {
-	super(0, size - 1);
-	PCheap = new PathCondition[size];
-	symInputHeap = new SymbolicInputHeap[size];
+	/* Initialize the IntIntervalGenerator to generate indices for
+	 * our array. */
+	super(0, size-1);
+
+	PC = new HeapPathCondition[size];
     }
 
-    // sets the heap constraints for the current choice
-    public void setCurrentPCheap(PathCondition pc) {
-	PCheap[getNextChoice()] = pc;
+    public void setCurrentPC(HeapPathCondition hpc) {
+	PC[getNextChoice()] = hpc;
     }
 
-    // returns the heap constraints for the current choice
-    public PathCondition getCurrentPCheap() {
-	PathCondition pc;
-
-	pc = PCheap[getNextChoice()];
-	if (pc != null) {
-	    return pc.make_copy();
-	} else {
-	    return null;
-	}
-    }
-
-    // sets the heap constraints for the current choice
-    public void setCurrentSymInputHeap(SymbolicInputHeap ih) {
-	symInputHeap[getNextChoice()] = ih;
-    }
-
-    // returns the heap constraints for the current choice
-    public SymbolicInputHeap getCurrentSymInputHeap() {
-	SymbolicInputHeap ih;
-
-	ih = symInputHeap[getNextChoice()];
-	if (ih != null) {
-	    return ih.make_copy();
-	} else {
-	    return null;
-	}
+    public HeapPathCondition getCurrentPC() {
+	/* For now, it's OK. We might need to copy this PC before
+	 * returning it. */
+	return PC[getNextChoice()];
     }
 }
