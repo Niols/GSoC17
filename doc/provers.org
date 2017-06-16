@@ -10,19 +10,15 @@ asking if {A} skip {false} and negating the answer. However, this
 might have an impact on the performances.
 
 * Asterix
-
 * CVC4
-- will be extended to support separation logic
-- sep logic writen in SMT libs input. Java support for SMT libs?
-
+- supports separation logic ([[http://cvc4.cs.stanford.edu/wiki/Separation_Logic][source]])
+- has a java interface (see [[https://github.com/CVC4/CVC4/blob/master/examples/SimpleVC.java][example]])
+- open source: modified BSD license ([[https://github.com/CVC4/CVC4/blob/master/COPYING][source]])
 * Cyclist
 - full fragment of inductive predicates and symbolic heaps
 - open source
-
 * S2SAT
 - closed source
-
 * smallfoot
-
 * Span
 - SMT libs input
