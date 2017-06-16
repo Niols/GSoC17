@@ -41,3 +41,4 @@ docker run gsoc jpf-symbc/src/examples/Assume.jpf
 * Other links
 - [[file:doc/log-book.org][Log book]]
 - [[file:doc/provers.org][Provers]]
+- [[file:doc/classes.org][Notes on JPF/SPF's classes]]
