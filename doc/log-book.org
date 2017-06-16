@@ -8,7 +8,7 @@
   - Play a bit with JPF
   - Play a bit with SPF
 - [X] Read JPF's [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/devel/choicegenerator][Developer Guide]]
-- [X] Read the [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/IDIV.java][IDIV]] and [[file:~/git/GSoC17/jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/ALOAD.java][ALOAD]] classes of SPF
+- [X] Read the [[file:../jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/IDIV.java][IDIV]] and [[file:../jpf-symbc/src/main/gov/nasa/jpf/symbc/bytecode/ALOAD.java][ALOAD]] classes of SPF
   - Need to better understand the choice generators
 - [X] Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
 
