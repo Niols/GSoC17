@@ -5,6 +5,41 @@
 
 * gov.nasa.jpf
 ** symbc
+*** bytecode
+**** ALOAD
+The ALOAD instruction of the JVM, symbolic version.
+
+We first read the configuration. If the =symbolic.lazy= option is not
+enabled, we use the concrete execution (idem for a few other cases).
+
+***** First time
+We try to find the previous HeapChoiceGenerator that was used in the
+execution, because this HeapChoiceGenerator will have a
+SymbolicInputHeap. Using this SymbolicInputHeap, we will thus be able
+to find all the objects of the same type that are already on the heap.
+
+Otherwise, if such a HeapChoiceGenerator does not exist, that means
+that there are no objects of the same type on the heap. (FIXME: sure?)
+
+We add two new possibilities: =null= or =this=. In case of an abstract
+class, only =null=; in case of "this", only =this=.
+
+We only remember the *number* of such objects. This will be enough to
+find them again afterwards.
+
+***** Other times
+We take our ChoiceGenerator. It must be a HeapChoiceGenerator (because
+this is what we set in the first pass). We take the next choice,
+represented by an integer.
+
+We fill the path conditions in the HeapChoiceGenerator. If a previous
+generator exists, we take its constraints and symbolic
+heaps. Otherwise, we create new ones.
+
+We then take a look at our current choice. If the choice corresponds
+to the index of an item of the right type, we handle the case
+corresponding to that item. If we are out of the bounds of the array
+containing those items, we are in fact handling the =null= or =this= case.
 *** heap
 **** HeapNode
 An abstract cell of the heap. Represented by:

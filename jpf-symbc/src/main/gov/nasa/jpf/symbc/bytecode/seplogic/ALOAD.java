@@ -55,86 +55,176 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 
     @Override
     public Instruction execute (ThreadInfo th) {
-	HeapNode[] prevSymRefs = null; // previously initialized objects of same type: candidates for lazy init
-        int numSymRefs = 0; // # of prev. initialized objects
-        ChoiceGenerator<?> prevHeapCG = null;
+
+	/* We first read the configuration to check that
+	 * symbolic.seplogic is set to true. If not, we use the usual
+	 * lazy (or not) version. */
 
 	Config conf = th.getVM().getConfig();
-	String[] lazy = conf.getStringArray("symbolic.lazy");
-	if (lazy == null || !lazy[0].equalsIgnoreCase("true"))
+	if (! conf.getBoolean("symbolic.seplogic", false)) {
 	    return super.execute(th);
+	}
 
-	// TODO: fix handle polymorphism
-		
+	/* We also don't want to handle a few other cases, we send
+	 * them to super. */
+	
 	StackFrame sf = th.getModifiableTopFrame();
 	int objRef = sf.peek();
 	ElementInfo ei = th.getElementInfo(objRef);
 	Object attr = sf.getLocalAttr(index);
 	String typeOfLocalVar = super.getLocalVariableType();
 
-	if(attr == null || typeOfLocalVar.equals("?") || attr instanceof SymbolicStringBuilder || attr instanceof StringExpression || attr instanceof ArrayExpression) {
+	if(attr == null
+	   || typeOfLocalVar.equals("?")
+	   || attr instanceof SymbolicStringBuilder
+	   || attr instanceof StringExpression
+	   || attr instanceof ArrayExpression) {
 	    return super.execute(th);
 	}
-		
+
+	/* Now, let's get to the real stuff. */
+
+	/* We get infos about the type of the object we are
+	 * manipulating. */
+	
 	ClassInfo typeClassInfo = ClassLoaderInfo.getCurrentResolvedClassInfo(typeOfLocalVar);
 
-	int currentChoice;
-	ChoiceGenerator<?> thisHeapCG;
-
-	// FIXME. Lots of stuff to change in here.
-	
 	if(!th.isFirstStepInsn()) {
-	    //System.out.println("the first time");
+	    /* If we are called for the first time */
 
-	    prevSymRefs = null;
-	    numSymRefs = 0;
-	    prevHeapCG = null;
+	    /* We find the previous ChoiceGenerator that is a
+	     * HeapChoiceGenerator. This is important, because this
+	     * HeapChoiceGenerator will contain a SymbolicHeap in
+	     * which we will find the objects that have the type we
+	     * are interested in -- canditates to lazy
+	     * initialization. We count the number of candidates. */
 
-	    prevHeapCG = th.getVM().getLastChoiceGeneratorOfType(HeapChoiceGenerator.class);
+	    int numSymRefs = 0;
+	    
+	    ChoiceGenerator<?> prevHeapCG = th.getVM().getLastChoiceGeneratorOfType(HeapChoiceGenerator.class);
 
-	    int increment = 2;
-	    if(typeClassInfo.isAbstract() || (((IntegerExpression)attr).toString()).contains("this")) {
-		abstractClass = true;
-		increment = 1; // only null for abstract, non null for this
+	    if (prevHeapCG != null) {
+		SymbolicInputHeap symInputHeap = ((HeapChoiceGenerator) prevHeapCG).getCurrentSymInputHeap();
+
+		HeapNode[] prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
+		numSymRefs = prevSymRefs.length;
 	    }
-			
-	    // TODO fix: subtypes
+	    
+	    /* We count the number of candidates to lazy
+	     * initialization that we will have to add. The two
+	     * candidates are NULL or a fresh object. In the case of
+	     * an abstract class, this can only be NULL. In the case
+	     * of a THIS object, this cannot. */
+	    
+	    int increment = 2;
+	    if(typeClassInfo.isAbstract()
+	       || (((IntegerExpression)attr).toString()).contains("this")) {
+		this.abstractClass = true;
+		increment = 1;
+	    }
 
-	    thisHeapCG = new HeapChoiceGenerator(numSymRefs+increment);  //+null,new
+	    /* We can now create a new HeapChoiceGenerator that will
+	     * only store this number (the number of previously
+	     * existing objects + the increment we just defined). We
+	     * store this HeapChoiceGenerator as the next
+	     * ChoiceGenerator and we return. */
+	    
+	    ChoiceGenerator<?> thisHeapCG = new HeapChoiceGenerator(numSymRefs+increment);
 			
 	    th.getVM().setNextChoiceGenerator(thisHeapCG);
 	    return this;
-	} else { 
-	    //this is what returns the results
-	    thisHeapCG = th.getVM().getChoiceGenerator();
-	    assert(thisHeapCG instanceof HeapChoiceGenerator) :
-	    "expected HeapChoiceGenerator, got:" + thisHeapCG;
-	    currentChoice = ((HeapChoiceGenerator) thisHeapCG).getNextChoice();
-	}
+	} 
 
+	/* If this is not the first call; this is where we return results. */
+
+	/* Let's first get our ChoiceGenerator. This must be a
+	 * HeapChoiceGenerator. Otherwise, something went horribly
+	 * wrong (OK, maybe not 'horribly'. 'Slightly'? */
+	
+	ChoiceGenerator<?> thisHeapCG = th.getVM().getChoiceGenerator();
+	assert(thisHeapCG instanceof HeapChoiceGenerator)
+	    : "expected HeapChoiceGenerator, got:" + thisHeapCG;
+
+	/* We then get the current choice. This is an integer: the
+	 * indice of the previously initialized object of the same
+	 * type, or, if this indice is out of bound, NULL or a fresh
+	 * object. */
+	
+	int currentChoice = ((HeapChoiceGenerator) thisHeapCG).getNextChoice();
+
+	/* We initialize our HeapPathCondition. To do that, we take a
+	 * look at a previously initiliazed HeapChoiceGenerator: if
+	 * there is one, we take its PC. If not, we create a new
+	 * one. Idem for our SymbolicInputHeap. */
+	
 	HeapPathCondition PC;
-
+	SymbolicInputHeap symInputHeap;
+	
         prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
-
 	if(prevHeapCG == null) {
 	    PC = new HeapPathCondition();
+	    symInputHeap = new SymbolicInputHeap();
 	} else {
 	    PC =  ((HeapChoiceGenerator) prevHeapCG).getCurrentPC();
+	    symInputHeap = ((HeapChoiceGenerator) prevHeapCG).getCurrentSymInputHeap();
+	}
+	assert PC != null;
+	assert symInputHeap != null;
+
+	/* We find the objects of the same type. */
+	
+	HeapNode[] prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
+
+	/* We define the index into JPF's dynamic area. */
+
+	int daIndex = 0;
+
+	if (currentChoice < prevSymRefs.length) {
+	    /* If currentChoice is an indice in the array, we are
+	     * handling the case of a previously initiliazed
+	     * object. */
+
+	    HeapNode candidateNode = prevSymRefs[currentChoice];
+
+	    /* FIXME: Here, we modify our PC */
+
+	    daIndex = candidateNode.getIndex();
+	}
+	else if (currentChoice == prevSymRefs.length
+		 && !(((IntegerExpression) attr).toString()).contains("this")) {
+	    /* If currentChoice is just outside the bounds, and if we
+	     * are not in the THIS case, then we are in the NULL
+	     * case. */
+
+	    /* FIXME: Here, we modify our PC */
+
+	    daIndex = MJIEnv.NULL;
+	}
+	else if ((currentChoice == (prevSymRefs.length + 1) && !abstractClass)
+		 || (currentChoice == prevSymRefs.length && (((IntegerExpression) attr).toString()).contains("this"))) {
+	    /* If we are in the case of a fresh object, we create one
+	     * with all fields symbolic. */
+
+	    boolean shared = (ei == null ? false : ei.isShared());
+	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, PC, symInputHeap, prevSymRefs.length, prevSymRefs, shared);
+	}
+	else {
+	    /* Otherwise, we are in the case of subtypes, which is not
+	     * currently handled by SPF. */
+	    
+	    System.err.println("subtypes not handled");
 	}
 
-	assert PC != null;
-		
-	int daIndex = 0; //index into JPF's dynamic area
-
+	/* Once all of this is done, we push what we need to on the
+	 * stack, update our path condition and symbolic input heap,
+	 * and return. */
+	
 	sf.setLocalVariable(index, daIndex, true);
 	sf.setLocalAttr(index, null);
 	sf.push(daIndex, true);
 
-	((HeapChoiceGenerator)thisHeapCG).setCurrentPC(PC);
-	
-	if (SymbolicInstructionFactory.debugMode) {
-	    System.out.println("[seplogic] ALOAD PC: " + PC);
-	}
+	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
+	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 	
 	return getNext(th);
     }
