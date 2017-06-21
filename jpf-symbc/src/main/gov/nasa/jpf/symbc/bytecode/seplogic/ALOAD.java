@@ -21,8 +21,6 @@ package gov.nasa.jpf.symbc.bytecode.seplogic;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.arrays.ArrayExpression;
-import gov.nasa.jpf.symbc.heap.HeapNode;
-import gov.nasa.jpf.symbc.heap.Helper;
 import gov.nasa.jpf.symbc.numeric.Comparator;
 import gov.nasa.jpf.symbc.numeric.IntegerConstant;
 import gov.nasa.jpf.symbc.numeric.IntegerExpression;
@@ -40,7 +38,11 @@ import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.SystemState;
 //import gov.nasa.jpf.symbc.uberlazy.TypeHierarchy;
 import gov.nasa.jpf.vm.ThreadInfo;
+
+import gov.nasa.jpf.symbc.heap.HeapNode;
+import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
+import gov.nasa.jpf.symbc.heap.seplogic.Helper;
 import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
 
 
@@ -160,7 +162,7 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	HeapPathCondition PC;
 	SymbolicInputHeap symInputHeap;
 	
-        prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
+        ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
 	if(prevHeapCG == null) {
 	    PC = new HeapPathCondition();
 	    symInputHeap = new SymbolicInputHeap();
@@ -206,7 +208,8 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	     * with all fields symbolic. */
 
 	    boolean shared = (ei == null ? false : ei.isShared());
-	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, PC, symInputHeap, prevSymRefs.length, prevSymRefs, shared);
+	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared);
+	    /* FIXME: Here, we modify our PC */
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not

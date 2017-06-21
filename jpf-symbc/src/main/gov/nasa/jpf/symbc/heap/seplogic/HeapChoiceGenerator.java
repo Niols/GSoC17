@@ -36,22 +36,27 @@
 //
 package gov.nasa.jpf.symbc.heap.seplogic;
 
+import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
 import gov.nasa.jpf.vm.choice.IntIntervalGenerator;
 
 public class HeapChoiceGenerator extends IntIntervalGenerator {
     /* We use the IntIntervalGenerator to generate array indices. */
+
+    /* We maintain "pairs" of symbolic input heaps and path
+     * conditions. */
     
-    protected HeapPathCondition [] PC;
-    // maintains heap-specific constraints on the heap; one PC per choice
-    
+    protected HeapPathCondition[] PC;
+    protected SymbolicInputHeap[] symInputHeap;
+        
     @SuppressWarnings("deprecation")
     public HeapChoiceGenerator(int size) {
 	/* Initialize the IntIntervalGenerator to generate indices for
 	 * our array. */
 	super(0, size-1);
 
-	PC = new HeapPathCondition[size];
+	this.PC = new HeapPathCondition[size];
+	this.symInputHeap = new SymbolicInputHeap[size];
     }
 
     public void setCurrentPC(HeapPathCondition hpc) {
@@ -62,5 +67,20 @@ public class HeapChoiceGenerator extends IntIntervalGenerator {
 	/* For now, it's OK. We might need to copy this PC before
 	 * returning it. */
 	return PC[getNextChoice()];
+    }
+
+    public void setCurrentSymInputHeap(SymbolicInputHeap ih) {
+	symInputHeap[getNextChoice()] = ih;
+    }
+
+    public SymbolicInputHeap getCurrentSymInputHeap() {
+	SymbolicInputHeap ih;
+
+	ih = symInputHeap[getNextChoice()];
+	if (ih != null) {
+	    return ih.make_copy();
+	} else {
+	    return null;
+	}
     }
 }
