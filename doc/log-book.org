@@ -12,23 +12,21 @@
   - Need to better understand the choice generators
 - [X] Read the [[https://docs.oracle.com/javase/specs/jvms/se8/jvms8.pdf][JVM's specification]] about instructions (6.5)
 
-* TODO "Administrative" code [0/3]
+* TODO "Administrative" code [2/3]
 - [-] Modify the SymbolicInstructionFactory to accept a
   *symbolic.seplogic* boolean argument that enables overloading of
   heap-related JVM instructions:
   - [X] ALOAD
   - [ ] …
-- [ ] Define a dummy class for HeapPathConstraints
-- [ ] Extend the HeapChoiceGenerate to use our HeapPathConstraints
-
-* TODO Real stuff [0/0]
+- [X] Define a dummy class for HeapPathConstraints
+- [X] Extend the HeapChoiceGenerator to use our HeapPathConstraints
+* TODO Real stuff [2/4]
 - [ ] Write small test programs
-- [ ] Define the structure of HeapPathCondition s
-- [ ] Define an abstract layout 
+- [X] Define the structure of HeapPathCondition s
+- [X] Define an abstract layout 
   - pointsTo
   - star
 - [ ] Plug one prover
-
 * More
 - lists
 - ...
