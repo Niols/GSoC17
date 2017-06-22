@@ -43,10 +43,10 @@ import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
-import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
+import gov.nasa.jpf.symbc.seplogic.*;
 
 
-public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
+public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
     public ALOAD(int localVarIndex) {
 	super(localVarIndex);
@@ -81,6 +81,7 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	   || attr instanceof SymbolicStringBuilder
 	   || attr instanceof StringExpression
 	   || attr instanceof ArrayExpression) {
+
 	    return super.execute(th);
 	}
 
@@ -159,12 +160,12 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	 * there is one, we take its PC. If not, we create a new
 	 * one. Idem for our SymbolicInputHeap. */
 	
-	HeapPathCondition PC;
+	SeplogicExpression PC;
 	SymbolicInputHeap symInputHeap;
 	
         ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
 	if(prevHeapCG == null) {
-	    PC = new HeapPathCondition();
+	    PC = new EmpExpression();
 	    symInputHeap = new SymbolicInputHeap();
 	} else {
 	    PC =  ((HeapChoiceGenerator) prevHeapCG).getCurrentPC();
@@ -188,7 +189,8 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
 
-	    /* FIXME: Here, we modify our PC */
+	    /* {PC} ALOAD(i) {PC /\ i -> .} */
+	    PC = new AndExpression(PC, new PointstoExpression(this.index, candidateNode.getSymbolic()));
 
 	    daIndex = candidateNode.getIndex();
 	}
@@ -198,7 +200,8 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	     * are not in the THIS case, then we are in the NULL
 	     * case. */
 
-	    /* FIXME: Here, we modify our PC */
+	    /* {PC} ALOAD(i) {PC * i -> NULL} */
+	    PC = new StarExpression(PC, new PointstoExpression(this.index, new IntegerConstant(-1)));
 
 	    daIndex = MJIEnv.NULL;
 	}
@@ -209,7 +212,20 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 
 	    boolean shared = (ei == null ? false : ei.isShared());
 	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared);
-	    /* FIXME: Here, we modify our PC */
+
+	    /* Get the newly created node. */
+	    
+	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
+	    assert freshNode != null;
+
+	    /* {PC} ALOAD(i) {PC * i -> freshNode}
+             *
+             * In the usual version using PathConditions, we have to
+	     * add a lot of constraints specifying that this fresh
+	     * node is different from all the others. Here, we get it
+	     * for free thanks to the separation logic! 
+             */
+	    PC = new StarExpression(PC, new PointstoExpression(this.index, freshNode));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not
@@ -226,6 +242,8 @@ public class ALOAD extends gov.nasa.jpf.jvm.bytecode.ALOAD {
 	sf.setLocalAttr(index, null);
 	sf.push(daIndex, true);
 
+	// System.out.println("Current PC: " + PC.toString());
+	
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 	

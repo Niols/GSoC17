@@ -37,7 +37,7 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
-import gov.nasa.jpf.symbc.seplogic.HeapPathCondition;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.vm.choice.IntIntervalGenerator;
 
 public class HeapChoiceGenerator extends IntIntervalGenerator {
@@ -46,7 +46,7 @@ public class HeapChoiceGenerator extends IntIntervalGenerator {
     /* We maintain "pairs" of symbolic input heaps and path
      * conditions. */
     
-    protected HeapPathCondition[] PC;
+    protected SeplogicExpression[] PCs;
     protected SymbolicInputHeap[] symInputHeap;
         
     @SuppressWarnings("deprecation")
@@ -55,18 +55,18 @@ public class HeapChoiceGenerator extends IntIntervalGenerator {
 	 * our array. */
 	super(0, size-1);
 
-	this.PC = new HeapPathCondition[size];
+	this.PCs = new SeplogicExpression[size];
 	this.symInputHeap = new SymbolicInputHeap[size];
     }
 
-    public void setCurrentPC(HeapPathCondition hpc) {
-	PC[getNextChoice()] = hpc;
+    public void setCurrentPC(SeplogicExpression PC) {
+	PCs[getNextChoice()] = PC;
     }
 
-    public HeapPathCondition getCurrentPC() {
+    public SeplogicExpression getCurrentPC() {
 	/* For now, it's OK. We might need to copy this PC before
 	 * returning it. */
-	return PC[getNextChoice()];
+	return PCs[getNextChoice()];
     }
 
     public void setCurrentSymInputHeap(SymbolicInputHeap ih) {
