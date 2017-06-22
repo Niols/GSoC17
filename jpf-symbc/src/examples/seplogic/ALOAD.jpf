@@ -4,6 +4,7 @@ classpath = ${jpf-symbc}/build/examples
 sourcepath = ${jpf-symbc}/src/examples 
 type_classpath = ${jpf-symbc}/build/examples/seplogic
 
+symbolic.debug = true
 symbolic.seplogic = true
 
 symbolic.method = seplogic.ALOAD.moreThanTwo(sym)

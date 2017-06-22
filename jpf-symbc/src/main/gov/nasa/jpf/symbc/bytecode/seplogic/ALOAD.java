@@ -3,16 +3,16 @@
  * Administrator of the National Aeronautics and Space Administration.
  * All rights reserved.
  *
- * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License, 
+ * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
- *        http://www.apache.org/licenses/LICENSE-2.0. 
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0.
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and 
+ * See the License for the specific language governing permissions and
  * limitations under the License.
  */
 
@@ -51,12 +51,15 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
     public ALOAD(int localVarIndex) {
 	super(localVarIndex);
     }
-	
+
     //private int numNewRefs = 0; // # of new reference objects to account for polymorphism -- work of Neha Rungta -- needs to be updated
     boolean abstractClass = false;
 
     @Override
     public Instruction execute (ThreadInfo th) {
+
+	if (SymbolicInstructionFactory.debugMode)
+	    System.out.println("Executing ALOAD with separation logic.");
 
 	/* We first read the configuration to check that
 	 * symbolic.seplogic is set to true. If not, we use the usual
@@ -69,7 +72,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	/* We also don't want to handle a few other cases, we send
 	 * them to super. */
-	
+
 	StackFrame sf = th.getModifiableTopFrame();
 	int objRef = sf.peek();
 	ElementInfo ei = th.getElementInfo(objRef);
@@ -89,7 +92,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	/* We get infos about the type of the object we are
 	 * manipulating. */
-	
+
 	ClassInfo typeClassInfo = ClassLoaderInfo.getCurrentResolvedClassInfo(typeOfLocalVar);
 
 	if(!th.isFirstStepInsn()) {
@@ -103,7 +106,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * initialization. We count the number of candidates. */
 
 	    int numSymRefs = 0;
-	    
+
 	    ChoiceGenerator<?> prevHeapCG = th.getVM().getLastChoiceGeneratorOfType(HeapChoiceGenerator.class);
 
 	    if (prevHeapCG != null) {
@@ -112,13 +115,13 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 		HeapNode[] prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
 		numSymRefs = prevSymRefs.length;
 	    }
-	    
+
 	    /* We count the number of candidates to lazy
 	     * initialization that we will have to add. The two
 	     * candidates are NULL or a fresh object. In the case of
 	     * an abstract class, this can only be NULL. In the case
 	     * of a THIS object, this cannot. */
-	    
+
 	    int increment = 2;
 	    if(typeClassInfo.isAbstract()
 	       || (((IntegerExpression)attr).toString()).contains("this")) {
@@ -131,19 +134,19 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * existing objects + the increment we just defined). We
 	     * store this HeapChoiceGenerator as the next
 	     * ChoiceGenerator and we return. */
-	    
+
 	    ChoiceGenerator<?> thisHeapCG = new HeapChoiceGenerator(numSymRefs+increment);
-			
+
 	    th.getVM().setNextChoiceGenerator(thisHeapCG);
 	    return this;
-	} 
+	}
 
 	/* If this is not the first call; this is where we return results. */
 
 	/* Let's first get our ChoiceGenerator. This must be a
 	 * HeapChoiceGenerator. Otherwise, something went horribly
 	 * wrong (OK, maybe not 'horribly'. 'Slightly'? */
-	
+
 	ChoiceGenerator<?> thisHeapCG = th.getVM().getChoiceGenerator();
 	assert(thisHeapCG instanceof HeapChoiceGenerator)
 	    : "expected HeapChoiceGenerator, got:" + thisHeapCG;
@@ -152,17 +155,17 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	 * indice of the previously initialized object of the same
 	 * type, or, if this indice is out of bound, NULL or a fresh
 	 * object. */
-	
+
 	int currentChoice = ((HeapChoiceGenerator) thisHeapCG).getNextChoice();
 
 	/* We initialize our HeapPathCondition. To do that, we take a
 	 * look at a previously initiliazed HeapChoiceGenerator: if
 	 * there is one, we take its PC. If not, we create a new
 	 * one. Idem for our SymbolicInputHeap. */
-	
+
 	SeplogicExpression PC;
 	SymbolicInputHeap symInputHeap;
-	
+
         ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
 	if(prevHeapCG == null) {
 	    PC = new EmpExpression();
@@ -175,7 +178,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	assert symInputHeap != null;
 
 	/* We find the objects of the same type. */
-	
+
 	HeapNode[] prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
 
 	/* We define the index into JPF's dynamic area. */
@@ -214,7 +217,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared);
 
 	    /* Get the newly created node. */
-	    
+
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
@@ -223,30 +226,31 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
              * In the usual version using PathConditions, we have to
 	     * add a lot of constraints specifying that this fresh
 	     * node is different from all the others. Here, we get it
-	     * for free thanks to the separation logic! 
+	     * for free thanks to the separation logic!
              */
 	    PC = new StarExpression(PC, new PointstoExpression(this.index, freshNode));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not
 	     * currently handled by SPF. */
-	    
+
 	    System.err.println("subtypes not handled");
 	}
 
 	/* Once all of this is done, we push what we need to on the
 	 * stack, update our path condition and symbolic input heap,
 	 * and return. */
-	
+
 	sf.setLocalVariable(index, daIndex, true);
 	sf.setLocalAttr(index, null);
 	sf.push(daIndex, true);
 
-	// System.out.println("Current PC: " + PC.toString());
-	
+	if (SymbolicInstructionFactory.debugMode)
+	    System.out.println("Current PC: " + PC.toString());
+
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
-	
+
 	return getNext(th);
     }
 }
