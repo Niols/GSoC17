@@ -36,7 +36,7 @@ class Node {
     }
 }
 
-public class ALOAD {
+public class TestALOAD {
 
     public static boolean moreThanTwo(Node n) {
 	Node m = n;
