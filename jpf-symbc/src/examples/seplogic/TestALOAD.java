@@ -19,16 +19,10 @@
 package seplogic;
 
 class Node {
-    int value;
     Node next;
 
-    public Node (int value, Node next) {
-	this.value = value;
+    public Node (Node next) {
 	this.next = next;
-    }
-
-    public int getValue() {
-	return value;
     }
     
     public Node getNext() {
@@ -40,7 +34,7 @@ public class TestALOAD {
 
     public static boolean moreThanTwo(Node n) {
 	Node m = n;
-	
+   
 	if (m == null) return false;
 	m = m.getNext();
 
@@ -50,14 +44,6 @@ public class TestALOAD {
     }
     
     public static void main(String[] args) {
-	Node n0 = null;
-	Node n1 = new Node(1, n0);
-	Node n2 = new Node(2, n1);
-	Node n3 = new Node(3, n2);
-
-	System.out.println(moreThanTwo(n0));
-	System.out.println(moreThanTwo(n1));
-	System.out.println(moreThanTwo(n2));
-	System.out.println(moreThanTwo(n3));
+	System.out.println(moreThanTwo(new Node (new Node (new Node (null)))));
     }
 }

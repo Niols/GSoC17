@@ -48,18 +48,14 @@ import gov.nasa.jpf.symbc.seplogic.*;
 
 public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
-    public ALOAD(int localVarIndex) {
+    public ALOAD (int localVarIndex) {
 	super(localVarIndex);
     }
 
-    //private int numNewRefs = 0; // # of new reference objects to account for polymorphism -- work of Neha Rungta -- needs to be updated
     boolean abstractClass = false;
 
     @Override
     public Instruction execute (ThreadInfo th) {
-
-	if (SymbolicInstructionFactory.debugMode)
-	    System.out.println("Executing ALOAD with separation logic.");
 
 	/* We first read the configuration to check that
 	 * symbolic.seplogic is set to true. If not, we use the usual
@@ -192,10 +188,11 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
 
-	    /* {PC} ALOAD(i) {PC /\ i -> .} */
-	    PC = new AndExpression(PC, new PointstoExpression(this.index, candidateNode.getSymbolic()));
-
 	    daIndex = candidateNode.getIndex();
+	    
+
+	    // PC = new AndExpression(PC, new PointstoExpression(this.index, candidateNode.getSymbolic()));
+	    PC = new AndExpression(PC, new PointstoExpression(daIndex, candidateNode.getSymbolic()));
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
@@ -203,8 +200,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * are not in the THIS case, then we are in the NULL
 	     * case. */
 
-	    /* {PC} ALOAD(i) {PC * i -> NULL} */
-	    PC = new StarExpression(PC, new PointstoExpression(this.index, new IntegerConstant(-1)));
+	    // /* {PC} ALOAD(i) {PC * i -> NULL} */
+	    // PC = new StarExpression(PC, new PointstoExpression(this.index, new IntegerConstant(-1)));
 
 	    daIndex = MJIEnv.NULL;
 	}
@@ -228,7 +225,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * node is different from all the others. Here, we get it
 	     * for free thanks to the separation logic!
              */
-	    PC = new StarExpression(PC, new PointstoExpression(this.index, freshNode));
+	    // PC = new StarExpression(PC, new PointstoExpression(this.index, freshNode));
+	    PC = new StarExpression(PC, new PointstoExpression(daIndex, freshNode));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not
@@ -246,7 +244,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	sf.push(daIndex, true);
 
 	if (SymbolicInstructionFactory.debugMode)
-	    System.out.println("Current PC: " + PC.toString());
+	    System.out.println("ALOAD PC: " + PC.toString());
 
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
