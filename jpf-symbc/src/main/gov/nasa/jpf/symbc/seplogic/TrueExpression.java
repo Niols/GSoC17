@@ -37,7 +37,11 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public enum BooleanOperator {
-    AND,
-    OR
+public class TrueExpression implements SeplogicExpression {
+    public TrueExpression() {
+    }
+
+    public String toString () {
+	return "true";
+    }
 }

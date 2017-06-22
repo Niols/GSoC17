@@ -45,4 +45,8 @@ public class WandExpression implements SeplogicExpression {
 	this.F1 = F1;
 	this.F2 = F2;
     }
+
+    public String toString() {
+	return "(" + F1.toString() + ") -* (" + F2.toString() + ")";
+    }
 }

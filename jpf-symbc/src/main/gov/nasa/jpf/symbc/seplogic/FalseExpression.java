@@ -37,5 +37,11 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public class HeapPathCondition {
+public class FalseExpression implements SeplogicExpression {
+    public FalseExpression() {
+    }
+
+    public String toString() {
+	return "false";
+    }
 }

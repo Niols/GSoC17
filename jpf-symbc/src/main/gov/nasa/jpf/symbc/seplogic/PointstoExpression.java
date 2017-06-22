@@ -37,8 +37,18 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import gov.nasa.jpf.symbc.numeric.Expression;
+
 public class PointstoExpression implements SeplogicExpression {
-    //FIXME
+    int index;
+    Expression expression;
     
-    public PointstoExpression() {}
+    public PointstoExpression(int index, Expression expression) {
+	this.index = index;
+	this.expression = expression;
+    }
+
+    public String toString() {
+	return index + " -> (" + expression.stringPC() + ")"; //FIXME MAYBE (hey, I just met you)
+    }
 }

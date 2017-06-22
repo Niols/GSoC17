@@ -43,4 +43,8 @@ public class NotExpression implements SeplogicExpression {
     public NotExpression(SeplogicExpression F) {
 	this.F = F;
     }
+
+    public String toString() {
+	return "not (" + F.toString() + ")";
+    }
 }

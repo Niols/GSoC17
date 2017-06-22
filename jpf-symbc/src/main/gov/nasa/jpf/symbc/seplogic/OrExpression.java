@@ -37,12 +37,16 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public class SepExpression implements SeplogicExpression {
+public class OrExpression implements SeplogicExpression {
     private SeplogicExpression F1;
     private SeplogicExpression F2;
     
-    public SepExpression(SeplogicExpression F1, SeplogicExpression F2) {
+    public OrExpression(SeplogicExpression F1, SeplogicExpression F2) {
 	this.F1 = F1;
 	this.F2 = F2;
+    }
+
+    public String toString() {
+	return "(" + F1.toString() + ") \\/ (" + F2.toString() + ")";
     }
 }

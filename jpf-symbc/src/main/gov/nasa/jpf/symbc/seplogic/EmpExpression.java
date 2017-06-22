@@ -40,4 +40,8 @@ package gov.nasa.jpf.symbc.seplogic;
 public class EmpExpression implements SeplogicExpression {
     public EmpExpression() {
     }
+
+    public String toString() {
+	return "emp";
+    }
 }

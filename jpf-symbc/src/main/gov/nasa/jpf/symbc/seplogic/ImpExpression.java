@@ -37,6 +37,16 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
+public class ImpExpression implements SeplogicExpression {
+    private SeplogicExpression F1;
+    private SeplogicExpression F2;
+    
+    public ImpExpression(SeplogicExpression F1, SeplogicExpression F2) {
+	this.F1 = F1;
+	this.F2 = F2;
+    }
+
+    public String toString() {
+	return "(" + this.F1.toString() + ") => (" + this.F2.toString() + ")";
+    }
 }
