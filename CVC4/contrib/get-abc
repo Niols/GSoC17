@@ -1,0 +1,59 @@
+#!/bin/bash
+#
+set -e
+
+commit=53f39c11b58d
+
+cd "$(dirname "$0")/.."
+
+if ! [ -e src/parser/cvc/Cvc.g ]; then
+  echo "$(basename $0): I expect to be in the contrib/ of a CVC4 source tree," >&2
+  echo "but apparently:" >&2
+  echo >&2
+  echo "  $(pwd)" >&2
+  echo >&2
+  echo "is not a CVC4 source tree ?!" >&2
+  exit 1
+fi
+
+function webget {
+  if which wget &>/dev/null; then
+    wget -c -O "$2" "$1"
+  elif which curl &>/dev/null; then
+    curl "$1" >"$2"
+  else
+    echo "Can't figure out how to download from web.  Please install wget or curl." >&2
+    exit 1
+  fi
+}
+
+if [ -e abc ]; then
+  echo 'error: file or directory "abc" exists; please move it out of the way.' >&2
+  exit 1
+fi
+
+mkdir abc
+cd abc
+webget https://bitbucket.org/alanmi/abc/get/$commit.tar.gz abc-$commit.tar.gz
+gunzip -f abc-$commit.tar.gz
+tar xfv abc-$commit.tar
+cd alanmi-abc-$commit
+
+# Strip out libSupport.c, it is in charge of loading extensions and we
+# don't want different behavior based on ABC_LIB_PATH, or based on what
+# .so is in the current directory!
+cp src/base/main/module.make src/base/main/module.make.orig
+grep -v 'libSupport\.c' src/base/main/module.make.orig > src/base/main/module.make
+cp src/base/main/mainInit.c src/base/main/mainInit.c.orig
+sed 's,\( *\)\(.*Libs_Init(\),\1//\2,;s,\( *\)\(.*Libs_End(\),\1//\2,' src/base/main/mainInit.c.orig > src/base/main/mainInit.c
+
+# Build optimized, without readline, without pthreads.
+# These aren't necessary for our usage and we don't want the dependencies.
+make libabc.a OPTFLAGS=-O ABC_USE_NO_READLINE=1 ABC_USE_NO_PTHREADS=1
+mv libabc.a libabc-static.a
+make clean
+make libabc.a OPTFLAGS='-O -fPIC' ABC_USE_NO_READLINE=1 ABC_USE_NO_PTHREADS=1
+
+echo
+echo ===================== Now configure CVC4 with =====================
+echo ./configure --with-abc --with-abc-dir=`pwd`
