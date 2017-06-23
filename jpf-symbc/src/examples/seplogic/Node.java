@@ -16,22 +16,18 @@
  * limitations under the License.
  */
 
+/* THIS IS NOT A TEST but a necessary file for other tests. */
+
 package seplogic;
 
-public class TestALOAD {
+public class Node {
+    Node next;
 
-    public static boolean moreThanTwo(Node n) {
-	Node m = n;
-   
-	if (m == null) return false;
-	m = m.getNext();
-
-	if (m == null) return false;
-
-	return true;
+    public Node (Node next) {
+	this.next = next;
     }
     
-    public static void main(String[] args) {
-	System.out.println(moreThanTwo(new Node (new Node (new Node (null)))));
+    public Node getNext() {
+	return next;
     }
 }

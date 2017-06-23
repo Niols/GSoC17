@@ -17,15 +17,17 @@
   *symbolic.seplogic* boolean argument that enables overloading of
   heap-related JVM instructions:
   - [X] ALOAD
-  - [ ] …
-- [X] Define a dummy class for HeapPathConstraints
+  - [X] GETFIELD
+  - [ ] ...
+- [X] Define a dummy class for +HeapPathConstraints+ SeplogicExpressions
 - [X] Extend the HeapChoiceGenerator to use our HeapPathConstraints
 * TODO Real stuff [2/4]
-- [ ] Write small test programs
+- [ ] Write small test programs:
+  - TestALOAD
+  - TestALOAD2
+  - ...
 - [X] Define the structure of HeapPathCondition s
 - [X] Define an abstract layout 
-  - pointsTo
-  - star
 - [ ] Plug one prover
 * More
 - lists

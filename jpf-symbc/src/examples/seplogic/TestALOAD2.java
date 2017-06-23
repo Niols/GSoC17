@@ -18,16 +18,10 @@
 
 package seplogic;
 
-public class TestALOAD {
+public class TestALOAD2 {
 
     public static boolean moreThanTwo(Node n) {
-	Node m = n;
-   
-	if (m == null) return false;
-	m = m.getNext();
-
-	if (m == null) return false;
-
+	n.getNext().getNext();
 	return true;
     }
     
