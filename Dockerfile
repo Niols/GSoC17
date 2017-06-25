@@ -18,13 +18,13 @@ RUN cd /root/jpf-core && ant build
 ## Get and build CVC4.
 COPY CVC4 /root/CVC4
 RUN cd /root/CVC4 && ./autogen.sh
-#RUN cd /root/CVC4 && sed -i 's|^.*jni\.h.*$|\0; ac_cv_header_jni_h=yes|' configure # So dirty
 RUN cd /root/CVC4 && ./configure --enable-language-bindings=java JAVA_CPPFLAGS='-I/usr/lib/jvm/java-8-openjdk-amd64/include -I/usr/lib/jvm/java-8-openjdk-amd64/include/linux'
 RUN cd /root/CVC4 && make
-# #build?
+RUN cd /root/CVC4 && make install
 
 ## Get and build JPF-symbc.
 COPY jpf-symbc /root/jpf-symbc
+RUN ln /root/CVC4/builds/x86_64-pc-linux-gnu/production/src/bindings/CVC4.jar /root/jpf-symbc/lib
 RUN cd /root/jpf-symbc && ant build
 
 ## Prepare for interactive mode.
