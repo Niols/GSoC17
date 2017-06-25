@@ -44,4 +44,9 @@ public class FalseExpression implements SeplogicExpression {
     public String toString() {
 	return "false";
     }
+
+    public SeplogicExpression copy() {
+	/* No need to copy when we're immutable! */
+	return this;
+    }
 }

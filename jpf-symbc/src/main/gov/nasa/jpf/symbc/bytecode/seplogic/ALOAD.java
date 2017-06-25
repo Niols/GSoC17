@@ -159,12 +159,12 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	 * there is one, we take its PC. If not, we create a new
 	 * one. Idem for our SymbolicInputHeap. */
 
-	SeplogicExpression PC;
+	PathConstraint PC;
 	SymbolicInputHeap symInputHeap;
 
         ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
 	if(prevHeapCG == null) {
-	    PC = new EmpExpression();
+	    PC = new PathConstraint();
 	    symInputHeap = new SymbolicInputHeap();
 	} else {
 	    PC =  ((HeapChoiceGenerator) prevHeapCG).getCurrentPC();
@@ -188,20 +188,15 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
 
-	    daIndex = candidateNode.getIndex();
-	    
+	    daIndex = candidateNode.getIndex();	    
 
-	    // PC = new AndExpression(PC, new PointstoExpression(this.index, candidateNode.getSymbolic()));
-	    PC = new AndExpression(PC, new PointstoExpression(daIndex, candidateNode.getSymbolic()));
+	    PC._and(new PointstoExpression(daIndex, candidateNode.getSymbolic()));
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
 	    /* If currentChoice is just outside the bounds, and if we
 	     * are not in the THIS case, then we are in the NULL
 	     * case. */
-
-	    // /* {PC} ALOAD(i) {PC * i -> NULL} */
-	    // PC = new StarExpression(PC, new PointstoExpression(this.index, new IntegerConstant(-1)));
 
 	    daIndex = MJIEnv.NULL;
 	}
@@ -225,8 +220,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * node is different from all the others. Here, we get it
 	     * for free thanks to the separation logic!
              */
-	    // PC = new StarExpression(PC, new PointstoExpression(this.index, freshNode));
-	    PC = new StarExpression(PC, new PointstoExpression(daIndex, freshNode));
+	    // PC._star(new StarExpression(PC, new PointstoExpression(this.index, freshNode)));
+	    PC._star(new PointstoExpression(daIndex, freshNode));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not

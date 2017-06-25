@@ -135,7 +135,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    : "expected HeapChoiceGenerator, got: " + thisHeapCG;
 	currentChoice = ((HeapChoiceGenerator) thisHeapCG).getNextChoice();
 
-	SeplogicExpression PC;
+	PathConstraint PC;
 	SymbolicInputHeap symInputHeap;
 
 	// depending on the currentChoice, we set the current field to an object that was already created
@@ -146,7 +146,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 
 	if (prevHeapCG == null) {
-	    PC = new EmpExpression();
+	    PC = new PathConstraint();
 	    symInputHeap = new SymbolicInputHeap();
 	}
 	else {
@@ -160,7 +160,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	/* FIXME: This information is important for the
 	 * provers. However, it would be nicer to have it added at
 	 * another time. When? */
-	PC = new AndExpression(PC, new PointstoExpression(objRef, symInputHeap.getNode(objRef)));
+	PC._and(new PointstoExpression(objRef, symInputHeap.getNode(objRef)));
 	
 	prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
 	numSymRefs = prevSymRefs.length;
@@ -170,12 +170,12 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
 	    // here we should update pcHeap with the constraint attr == candidateNode.sym_v
 	    
-	    PC = new AndExpression(PC, new FieldpointstoExpression(objRef, this.fname, candidateNode.getSymbolic()));
+	    PC._and(new FieldpointstoExpression(objRef, this.fname, candidateNode.getSymbolic()));
 	    
 	    daIndex = candidateNode.getIndex();
 	}
 	else if (currentChoice == numSymRefs){ //null object
-	    PC = new StarExpression(PC, new FieldpointstoExpression(objRef, this.fname, new IntegerConstant(-1)));
+	    PC._star(new FieldpointstoExpression(objRef, this.fname, new IntegerConstant(-1)));
 	    
 	    daIndex = MJIEnv.NULL;
 	}
@@ -186,13 +186,13 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
-	    PC = new StarExpression(PC, new FieldpointstoExpression(objRef, this.fname, freshNode));
+	    PC._star(new FieldpointstoExpression(objRef, this.fname, freshNode));
 	}
 	else {
 	    System.err.println("subtyping not handled");
 	}
 
-	ei.setReferenceField(fi,daIndex );
+	ei.setReferenceField(fi, daIndex);
 	ei.setFieldAttr(fi, null);
 
 	frame.pushRef(daIndex);

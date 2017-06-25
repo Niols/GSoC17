@@ -44,4 +44,9 @@ public class EmpExpression implements SeplogicExpression {
     public String toString() {
 	return "emp";
     }
+
+    public SeplogicExpression copy() {
+	/* No need to copy when we're immutable! */
+	return this;
+    }
 }

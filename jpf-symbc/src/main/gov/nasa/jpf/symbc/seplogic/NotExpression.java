@@ -38,7 +38,7 @@
 package gov.nasa.jpf.symbc.seplogic;
 
 public class NotExpression implements SeplogicExpression {
-    private SeplogicExpression F;
+    private final SeplogicExpression F;
     
     public NotExpression(SeplogicExpression F) {
 	this.F = F;
@@ -46,5 +46,10 @@ public class NotExpression implements SeplogicExpression {
 
     public String toString() {
 	return "not (" + F.toString() + ")";
+    }
+
+    public SeplogicExpression copy() {
+	/* No need to copy when we're immutable! */
+	return this;
     }
 }

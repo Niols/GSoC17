@@ -40,9 +40,9 @@ package gov.nasa.jpf.symbc.seplogic;
 import gov.nasa.jpf.symbc.numeric.Expression;
 
 public class FieldpointstoExpression implements SeplogicExpression {
-    int index;
-    String fieldName;
-    Expression expression;
+    private final int index;
+    private final String fieldName;
+    private final Expression expression;
     
     public FieldpointstoExpression(int index, String fieldName, Expression expression) {
 	this.index = index;
@@ -52,5 +52,10 @@ public class FieldpointstoExpression implements SeplogicExpression {
 
     public String toString() {
 	return index + "." + fieldName + " -> (" + expression.stringPC() + ")"; //FIXME MAYBE (hey, I just met you)
+    }
+
+    public SeplogicExpression copy() {
+	/* No need to copy when we're immutable! */
+	return this;
     }
 }

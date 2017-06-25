@@ -38,8 +38,8 @@
 package gov.nasa.jpf.symbc.seplogic;
 
 public class ImpExpression implements SeplogicExpression {
-    private SeplogicExpression F1;
-    private SeplogicExpression F2;
+    private final SeplogicExpression F1;
+    private final SeplogicExpression F2;
     
     public ImpExpression(SeplogicExpression F1, SeplogicExpression F2) {
 	this.F1 = F1;
@@ -48,5 +48,10 @@ public class ImpExpression implements SeplogicExpression {
 
     public String toString() {
 	return "(" + this.F1.toString() + ") => (" + this.F2.toString() + ")";
+    }
+
+    public SeplogicExpression copy() {
+	/* No need to copy when we're immutable! */
+	return this;
     }
 }
