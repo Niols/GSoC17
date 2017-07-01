@@ -196,7 +196,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 	frame.pushRef(daIndex);
 
-	if (SymbolicInstructionFactory.debugMode)
+	if (SymbolicInstructionFactory.seplogicDebugMode)
 	    System.out.println("GETFIELD: " + PC);
 	
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);

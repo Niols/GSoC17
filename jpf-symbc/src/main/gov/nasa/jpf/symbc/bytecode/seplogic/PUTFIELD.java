@@ -29,6 +29,7 @@ import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.ThreadInfo;
 
 /* SPF imports */
+import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
@@ -140,6 +141,10 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 		PC.updateField(SL.Variable(objRefNode), fname,
 			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger()));
 	    }
+
+	    if (SymbolicInstructionFactory.seplogicDebugMode)
+		System.out.println("PUTFIELD: " + PC);
+
 	}
 	
 	/* FIXME: handle shared objects, handle 'long' operands. */

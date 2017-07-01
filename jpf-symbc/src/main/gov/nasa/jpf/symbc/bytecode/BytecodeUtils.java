@@ -460,8 +460,6 @@ public class BytecodeUtils {
                         // the argument is of reference type and it is symbolic
 			if((lazy != null && lazy[0].equalsIgnoreCase("true")) || seplogic) {
 
-			    System.out.println("Seploogic FTW!");
-			    
 				IntegerExpression sym_v = new SymbolicInteger(varName(name, VarType.REF));
 				expressionMap.put(name, sym_v);
 				sf.setOperandAttr(stackIdx, sym_v);

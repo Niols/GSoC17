@@ -30,8 +30,8 @@ public class TestExtends {
 	    System.out.println("The node was null ><. I can't work in those conditions!");
 	}
 	else if (m.getNext() == null) {
-	    System.out.println("The node was alone :-(. I had to give him a friend.");
 	    m.setNext(new SetableNode(null));
+	    System.out.println("The node was alone :-(. I had to give him a friend.");
 	}
 	else {
 	    System.out.println("The node already had a friend! :-).");
