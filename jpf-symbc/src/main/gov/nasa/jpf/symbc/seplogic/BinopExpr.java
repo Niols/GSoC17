@@ -37,8 +37,32 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+public class BinopExpr implements SeplogicExpression {
+    private final SeplogicBinop b;
+    private final SeplogicVariable l;
+    private final SeplogicValue v;
+
+    public BinopExpr(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
+	this.b = b;
+	this.l = l;
+	this.v = v;
+    }
+
+    public String toString() {
+	return l.toString() + " " + b.toString() + " " + v.toString();
+    }
+
+    public SeplogicExpression copy() {
+	return this;
+    }
+
+    public SeplogicExpression simplify() {
+	if (l.equals(v)) {
+	    if (b == SeplogicBinop.EQ)
+		return new TrueExpr();
+	    if (b == SeplogicBinop.NE)
+		return new FalseExpr();
+	}
+	return this;
+    }
 }

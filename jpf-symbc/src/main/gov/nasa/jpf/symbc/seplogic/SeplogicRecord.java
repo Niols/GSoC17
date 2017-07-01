@@ -37,8 +37,33 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+public class SeplogicRecord implements SeplogicValue {
+
+    //FIXME: would probably be better as a map
+    private final int cardinal;
+    private final String[] keys;
+    private final SeplogicVariable[] values;
+    
+    public SeplogicRecord(String[] keys, SeplogicVariable[] values) {
+	this.cardinal = keys.length; //FIXME
+	this.keys = keys.clone();
+	this.values = values.clone();
+    }
+    
+    public String toString() {
+	if (cardinal == 0)
+	    return "{| |}";
+	
+	String repr = "{| ";
+	
+	for (int i = 0; i < cardinal - 1; i++) {
+	    repr += keys[i]+" = "+values[i].toString() + " ; ";
+	}
+
+	return repr + keys[cardinal - 1] + " = " + values[cardinal - 1].toString() + " |}";
+    }
+    
+    public SeplogicValue copy() {
+	return this;
+    }
 }

@@ -37,8 +37,18 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+public class TrueExpr implements SeplogicExpression {
+    public TrueExpr() {}
+    
+    public String toString() {
+	return "true";
+    }
+    
+    public TrueExpr copy() {
+	return this;
+    }
+
+    public TrueExpr simplify() {
+	return this;
+    }
 }

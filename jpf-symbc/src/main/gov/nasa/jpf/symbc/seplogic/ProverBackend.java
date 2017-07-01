@@ -37,8 +37,18 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+enum ProverBackend {
+    None("None");
+    //CVC4("CVC4");
+
+    private final String repr;
+
+    ProverBackend(String repr) {
+	this.repr = repr;
+    }
+
+    @Override
+    public String toString() {
+	return repr;
+    }
 }

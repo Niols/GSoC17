@@ -37,8 +37,24 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+public class PointstoExpr implements SeplogicExpression {
+    private final SeplogicVariable l;
+    private final SeplogicValue v;
+    
+    public PointstoExpr(SeplogicVariable l, SeplogicValue v) {
+	this.l = l;
+	this.v = v;
+    }
+    
+    public String toString() {
+	return l.toString() + " -> " + v.toString();
+    }
+    
+    public SeplogicExpression copy() {
+	return this;
+    }
+
+    public SeplogicExpression simplify() {
+	return this.copy();
+    }
 }

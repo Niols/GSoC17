@@ -37,8 +37,14 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+public class NullValue implements SeplogicValue {
+    public NullValue() {}
+    
+    public String toString() {
+	return "null";
+    }
+    
+    public NullValue copy() {
+	return this;
+    }
 }

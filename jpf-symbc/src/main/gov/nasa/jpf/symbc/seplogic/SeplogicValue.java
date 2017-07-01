@@ -37,8 +37,7 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
+public interface SeplogicValue {
     public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+    public SeplogicValue copy();
 }

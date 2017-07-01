@@ -37,8 +37,18 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicExpression {
-    public String toString();
-    public SeplogicExpression copy();
-    public SeplogicExpression simplify();
+enum SeplogicBinop {
+    EQ("="),
+    NE("!=");
+
+    private final String repr;
+
+    SeplogicBinop(String repr) {
+	this.repr = repr;
+    }
+
+    @Override
+    public String toString() {
+	return repr;
+    }
 }
