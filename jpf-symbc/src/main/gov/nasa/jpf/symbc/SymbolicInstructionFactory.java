@@ -444,6 +444,12 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 	return (filter.isPassing(ci) ?  new GETSTATIC(fieldName, clsName, fieldDescriptor): super.getstatic(fieldName, clsName, fieldDescriptor));
     }
 
+    public Instruction putfield(String fieldName, String clsDescriptor, String fieldDescriptor) {
+	return (seplogic
+		? new gov.nasa.jpf.symbc.bytecode.seplogic.PUTFIELD(fieldName, clsDescriptor, fieldDescriptor)
+		: super.putfield(fieldName, clsDescriptor, fieldDescriptor));
+    }
+    
     // array ops
     public Instruction arraylength() {
 	return (symArrays ? new gov.nasa.jpf.symbc.bytecode.symarrays.ARRAYLENGTH() : super.arraylength());
@@ -769,6 +775,4 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
 	   System.err.println("Warning: undefined value should be outside  min..max ranges");
 	*/
     }
-
-
 }
