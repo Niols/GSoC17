@@ -18,16 +18,8 @@
 
 package gov.nasa.jpf.symbc.bytecode.seplogic;
 
+/* JPF imports */
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.symbc.arrays.ArrayExpression;
-
-import gov.nasa.jpf.symbc.numeric.Comparator;
-import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.PathCondition;
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-import gov.nasa.jpf.symbc.string.StringExpression;
-import gov.nasa.jpf.symbc.string.SymbolicStringBuilder;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.ElementInfo;
@@ -35,15 +27,25 @@ import gov.nasa.jpf.vm.FieldInfo;
 import gov.nasa.jpf.vm.Instruction;
 import gov.nasa.jpf.vm.MJIEnv;
 import gov.nasa.jpf.vm.StackFrame;
-//import gov.nasa.jpf.symbc.uberlazy.TypeHierarchy;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.vm.choice.IntChoiceFromSet;
 
+/* SPF imports */
+import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
+import gov.nasa.jpf.symbc.arrays.ArrayExpression;
+import gov.nasa.jpf.symbc.numeric.Comparator;
+import gov.nasa.jpf.symbc.numeric.IntegerConstant;
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.string.StringExpression;
+import gov.nasa.jpf.symbc.string.SymbolicStringBuilder;
 import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
+
+/* SPF+SL imports */
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
-import gov.nasa.jpf.symbc.seplogic.*;
+import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
+import gov.nasa.jpf.symbc.seplogic.SL;
 
 
 public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
@@ -135,7 +137,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    : "expected HeapChoiceGenerator, got: " + thisHeapCG;
 	currentChoice = ((HeapChoiceGenerator) thisHeapCG).getNextChoice();
 
-	PathConstraint PC;
+	PathCondition PC;
 	SymbolicInputHeap symInputHeap;
 
 	// depending on the currentChoice, we set the current field to an object that was already created
@@ -146,7 +148,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 
 	if (prevHeapCG == null) {
-	    PC = new PathConstraint();
+	    PC = new PathCondition();
 	    symInputHeap = new SymbolicInputHeap();
 	}
 	else {
@@ -157,36 +159,33 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	assert PC != null;
 	assert symInputHeap != null;
 
-	/* FIXME: This information is important for the
-	 * provers. However, it would be nicer to have it added at
-	 * another time. When? */
-	PC._and(new PointstoExpression(objRef, symInputHeap.getNode(objRef)));
-	
 	prevSymRefs = symInputHeap.getNodesOfType(typeClassInfo);
 	numSymRefs = prevSymRefs.length;
 
 	int daIndex = 0; //index into JPF's dynamic area
-	if (currentChoice < numSymRefs) { // lazy initialization using a previously lazily initialized object
+	if (currentChoice < numSymRefs) {
+	    // lazy initialization using a previously lazily initialized object
+	    
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
-	    // here we should update pcHeap with the constraint attr == candidateNode.sym_v
-	    
-	    PC._and(new FieldpointstoExpression(objRef, this.fname, candidateNode.getSymbolic()));
-	    
+
 	    daIndex = candidateNode.getIndex();
+
+	    PC._star(SL.Pointsto((SymbolicInteger) attr, candidateNode.getSymbolic()));
 	}
 	else if (currentChoice == numSymRefs){ //null object
-	    PC._star(new FieldpointstoExpression(objRef, this.fname, new IntegerConstant(-1)));
-	    
 	    daIndex = MJIEnv.NULL;
+
+	    PC._star(SL.Eq((SymbolicInteger) attr, SL.Null()));
 	}
 	else if (currentChoice == (numSymRefs + 1) && !abstractClass) {
 	    // creates a new object with all fields symbolic and adds the object to SymbolicHeap
 
-	    daIndex = Helper.addNewHeapNode(typeClassInfo, ti, attr, symInputHeap, ei.isShared());
+	    daIndex = Helper.addNewHeapNode(typeClassInfo, ti, attr, symInputHeap, ei.isShared(), PC);
 
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
-	    PC._star(new FieldpointstoExpression(objRef, this.fname, freshNode));
+
+	    PC._star(SL.Pointsto((SymbolicInteger) attr, freshNode));
 	}
 	else {
 	    System.err.println("subtyping not handled");
@@ -198,7 +197,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	frame.pushRef(daIndex);
 
 	if (SymbolicInstructionFactory.debugMode)
-	    System.out.println("GETFIELD PC: " + PC);
+	    System.out.println("GETFIELD: " + PC);
 	
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);

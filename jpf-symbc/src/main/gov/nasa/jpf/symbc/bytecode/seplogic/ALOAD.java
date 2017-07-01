@@ -18,15 +18,8 @@
 
 package gov.nasa.jpf.symbc.bytecode.seplogic;
 
+/* JPF imports */
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.symbc.arrays.ArrayExpression;
-import gov.nasa.jpf.symbc.numeric.Comparator;
-import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.IntegerExpression;
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-import gov.nasa.jpf.symbc.string.StringExpression;
-import gov.nasa.jpf.symbc.string.SymbolicStringBuilder;
 import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.ClassLoaderInfo;
@@ -36,15 +29,25 @@ import gov.nasa.jpf.vm.KernelState;
 import gov.nasa.jpf.vm.MJIEnv;
 import gov.nasa.jpf.vm.StackFrame;
 import gov.nasa.jpf.vm.SystemState;
-//import gov.nasa.jpf.symbc.uberlazy.TypeHierarchy;
 import gov.nasa.jpf.vm.ThreadInfo;
 
+/* SPF imports */
+import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
+import gov.nasa.jpf.symbc.arrays.ArrayExpression;
+import gov.nasa.jpf.symbc.numeric.Comparator;
+import gov.nasa.jpf.symbc.numeric.IntegerConstant;
+import gov.nasa.jpf.symbc.numeric.IntegerExpression;
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.string.StringExpression;
+import gov.nasa.jpf.symbc.string.SymbolicStringBuilder;
 import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
+
+/* JPF+SL imports */
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
-import gov.nasa.jpf.symbc.seplogic.*;
-
+import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
+import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
@@ -159,12 +162,12 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	 * there is one, we take its PC. If not, we create a new
 	 * one. Idem for our SymbolicInputHeap. */
 
-	PathConstraint PC;
+	PathCondition PC;
 	SymbolicInputHeap symInputHeap;
 
         ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
 	if(prevHeapCG == null) {
-	    PC = new PathConstraint();
+	    PC = new PathCondition();
 	    symInputHeap = new SymbolicInputHeap();
 	} else {
 	    PC =  ((HeapChoiceGenerator) prevHeapCG).getCurrentPC();
@@ -190,7 +193,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = candidateNode.getIndex();	    
 
-	    PC._and(new PointstoExpression(daIndex, candidateNode.getSymbolic()));
+	    PC._star(SL.Pointsto((SymbolicInteger) attr, candidateNode.getSymbolic()));
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
@@ -199,6 +202,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * case. */
 
 	    daIndex = MJIEnv.NULL;
+
+	    PC._star(SL.Eq((SymbolicInteger) attr, SL.Null()));
 	}
 	else if ((currentChoice == (prevSymRefs.length + 1) && !abstractClass)
 		 || (currentChoice == prevSymRefs.length && (((IntegerExpression) attr).toString()).contains("this"))) {
@@ -206,22 +211,14 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	     * with all fields symbolic. */
 
 	    boolean shared = (ei == null ? false : ei.isShared());
-	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared);
+	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared, PC);
 
 	    /* Get the newly created node. */
 
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
-	    /* {PC} ALOAD(i) {PC * i -> freshNode}
-             *
-             * In the usual version using PathConditions, we have to
-	     * add a lot of constraints specifying that this fresh
-	     * node is different from all the others. Here, we get it
-	     * for free thanks to the separation logic!
-             */
-	    // PC._star(new StarExpression(PC, new PointstoExpression(this.index, freshNode)));
-	    PC._star(new PointstoExpression(daIndex, freshNode));
+	    PC._star(SL.Pointsto((SymbolicInteger) attr, freshNode));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not
@@ -239,7 +236,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	sf.push(daIndex, true);
 
 	if (SymbolicInstructionFactory.debugMode)
-	    System.out.println("ALOAD PC: " + PC.toString());
+	    System.out.println("ALOAD: " + PC.toString());
 
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);

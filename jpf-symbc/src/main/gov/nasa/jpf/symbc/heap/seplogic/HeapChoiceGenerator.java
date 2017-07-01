@@ -37,7 +37,6 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
-import gov.nasa.jpf.symbc.seplogic.PathConstraint;
 import gov.nasa.jpf.vm.choice.IntIntervalGenerator;
 
 public class HeapChoiceGenerator extends IntIntervalGenerator {
@@ -46,7 +45,7 @@ public class HeapChoiceGenerator extends IntIntervalGenerator {
     /* We maintain "pairs" of symbolic input heaps and path
      * conditions. */
     
-    protected PathConstraint[] PCs;
+    protected PathCondition[] PCs;
     protected SymbolicInputHeap[] symInputHeap;
         
     @SuppressWarnings("deprecation")
@@ -55,18 +54,18 @@ public class HeapChoiceGenerator extends IntIntervalGenerator {
 	 * our array. */
 	super(0, size-1);
 
-	this.PCs = new PathConstraint[size];
+	this.PCs = new PathCondition[size];
 	this.symInputHeap = new SymbolicInputHeap[size];
     }
 
-    public void setCurrentPC(PathConstraint PC) {
+    public void setCurrentPC(PathCondition PC) {
 	PCs[getNextChoice()] = PC;
     }
 
-    public PathConstraint getCurrentPC() {
+    public PathCondition getCurrentPC() {
 	/* For now, it's OK. We might need to copy this PC before
 	 * returning it. */
-	PathConstraint PC = PCs[getNextChoice()];
+	PathCondition PC = PCs[getNextChoice()];
 
 	if (PC == null) {
 	    return null;
