@@ -5,6 +5,9 @@
 *#
 *.#*
 
+## Java files
+*.class
+
 ## Specific files
 .hg
 .version
