@@ -26,7 +26,6 @@ import gov.nasa.jpf.symbc.numeric.Expression;
 import gov.nasa.jpf.symbc.numeric.IntegerConstant;
 import gov.nasa.jpf.symbc.numeric.IntegerExpression;
 import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
-import gov.nasa.jpf.symbc.numeric.PathCondition;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 import gov.nasa.jpf.symbc.numeric.SymbolicReal;
 import gov.nasa.jpf.symbc.string.StringSymbolic;
@@ -44,6 +43,8 @@ import gov.nasa.jpf.vm.StaticElementInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
 import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
+import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
+import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class Helper {
 
@@ -76,10 +77,14 @@ public class Helper {
 	return sym_v;
     }
     
-    public static void initializeInstanceFields(FieldInfo[] fields, ElementInfo eiRef,
+    public static Expression[] initializeInstanceFields(FieldInfo[] fields, ElementInfo eiRef,
 						String refChain) {
+	Expression[] sym_vs = new Expression[fields.length];
+	
 	for (int i=0; i<fields.length;i++)
-	    initializeInstanceField(fields[i], eiRef, refChain, "");
+	    sym_vs[i] = initializeInstanceField(fields[i], eiRef, refChain, "");
+
+	return sym_vs;
     }
 
     public static Expression initializeStaticField(FieldInfo staticField, ClassInfo ci,
@@ -90,6 +95,7 @@ public class Helper {
 
 	name = staticField.getName();
 	String fullName = ci.getName() + "." + name + suffix;// + "_init";
+	
 	if (staticField instanceof IntegerFieldInfo
 	    || staticField instanceof LongFieldInfo) {
 	    sym_v = new SymbolicInteger(fullName);
@@ -108,6 +114,7 @@ public class Helper {
 	    // treat boolean as an integer with range [0,1]
 	    sym_v = new SymbolicInteger(fullName, 0, 1);
 	}
+	
 	StaticElementInfo sei = ci.getModifiableStaticElementInfo();
 	if (sei == null) {
 	    ci.registerClass(ti);
@@ -119,63 +126,87 @@ public class Helper {
 	return sym_v;
     }
 
-    public static void initializeStaticFields(FieldInfo[] staticFields, ClassInfo ci,
-					      ThreadInfo ti) {
-	if (staticFields.length > 0) {
-	    for (int i = 0; i < staticFields.length; i++)
-		initializeStaticField(staticFields[i], ci, ti, "");
-	}
+    public static Expression[] initializeStaticFields(FieldInfo[] staticFields, ClassInfo ci,
+						      ThreadInfo ti) {
+	Expression[] sym_vs = new Expression[staticFields.length];
+	
+	for (int i = 0; i < staticFields.length; i++)
+	    sym_vs[i] = initializeStaticField(staticFields[i], ci, ti, "");
+
+	return sym_vs;
+    }
+
+    public static SymbolicInteger[] expressionArrayToSymbolicIntegerArray(Expression[] symbolicValues) {
+	SymbolicInteger[] symbolicIntegers = new SymbolicInteger[symbolicValues.length];
+
+	//FIXME: the fact that we assume that all expressions are
+	//symbolicIntegers will probably be annoying in the future.
+
+	for (int i = 0; i < symbolicValues.length; i++)
+	    symbolicIntegers[i] = (SymbolicInteger) symbolicValues[i];
+
+	return symbolicIntegers;
+    }
+
+    public static FieldInfo[] mergeFieldInfoArrays(FieldInfo[] a1, FieldInfo[] a2) {
+	//FIXME: when connected to internet, find a way to do that
+	//with the stdlib.	
+	FieldInfo[] a = new FieldInfo[a1.length + a2.length];
+	for (int i = 0; i < a1.length; i++) a[i] = a1[i];
+	for (int j = 0; j < a2.length; j++) a[j + a1.length] = a2[j];
+	return a;
+    }
+    public static SymbolicInteger[] mergeSymbolicIntegerArrays(SymbolicInteger[] a1, SymbolicInteger[] a2) {
+	//FIXME: when connected to internet, find a way to do that
+	//with the stdlib.	
+	SymbolicInteger[] a = new SymbolicInteger[a1.length + a2.length];
+	for (int i = 0; i < a1.length; i++) a[i] = a1[i];
+	for (int j = 0; j < a2.length; j++) a[j + a1.length] = a2[j];
+	return a;
     }
     
     public static int addNewHeapNode(ClassInfo typeClassInfo, ThreadInfo ti,
 				     Object attr, SymbolicInputHeap symInputHeap,
-				     boolean setShared) {
+				     boolean setShared, PathCondition PC) {
 	int daIndex = ti.getHeap().newObject(typeClassInfo, ti).getObjectRef();
 	ti.getHeap().registerPinDown(daIndex);
 	String refChain = ((SymbolicInteger) attr).getName(); // + "[" + daIndex + "]"; // do we really need to add daIndex here?
-	SymbolicInteger newSymRef = new SymbolicInteger( refChain);
+	SymbolicInteger newSymRef = new SymbolicInteger(refChain);
 	ElementInfo eiRef =  ti.getModifiableElementInfo(daIndex);//ti.getElementInfo(daIndex); // TODO to review!
 	if(setShared) {
 	    eiRef.setShared(ti,true);//??
 	}
 	//daIndex.getObjectRef() -> number
 
-	// neha: this change allows all the fields in the class hierarchy of the
-	// object to be initialized as symbolic and not just its instance fields
-
+	/* Create all the fields necessary. */
+	
 	int numOfFields = eiRef.getNumberOfFields();
 	FieldInfo[] fields = new FieldInfo[numOfFields];
 	for(int fieldIndex = 0; fieldIndex < numOfFields; fieldIndex++) {
 	    fields[fieldIndex] = eiRef.getFieldInfo(fieldIndex);
 	}
 
-	Helper.initializeInstanceFields(fields, eiRef,refChain);
-
-	//neha: this change allows all the static fields in the class hierarchy
-	// of the object to be initialized as symbolic and not just its immediate
-	// static fields
+	Expression[] symbolicValues = Helper.initializeInstanceFields(fields, eiRef,refChain);
+	SymbolicInteger[] symbolicIntegers = expressionArrayToSymbolicIntegerArray(symbolicValues);
+	
+	/* Idem for static fields. */
+	
 	ClassInfo superClass = typeClassInfo;
 	while(superClass != null) {
 	    FieldInfo[] staticFields = superClass.getDeclaredStaticFields();
-	    Helper.initializeStaticFields(staticFields, superClass, ti);
+	    fields = mergeFieldInfoArrays(fields, staticFields);
+	    
+	    Expression[] symbolicStaticValues = Helper.initializeStaticFields(staticFields, superClass, ti);
+	    symbolicIntegers = mergeSymbolicIntegerArrays(symbolicIntegers, expressionArrayToSymbolicIntegerArray(symbolicStaticValues));
+	    
 	    superClass = superClass.getSuperClass();
 	}
 
-	// Put symbolic array in PC if we create a new array.
-	if (typeClassInfo.isArray()) {
-	    String typeClass = typeClassInfo.getType();
-	    ArrayExpression arrayAttr = null;
-	    if (typeClass.charAt(1) != 'L') {
-		arrayAttr = new ArrayExpression(eiRef.toString());
-	    } else {
-		arrayAttr = new ArrayExpression(eiRef.toString(), typeClass.substring(2, typeClass.length() -1));
-	    }
-	    ti.getVM().getLastChoiceGeneratorOfType(PCChoiceGenerator.class).getCurrentPC().arrayExpressions.put(eiRef.toString(), arrayAttr);
-	}
+	PC._star(SL.Eq(newSymRef, SL.Record(fields, symbolicIntegers)));
 
 	// create new HeapNode based on above info
 	// update associated symbolic input heap
-	HeapNode n= new HeapNode(daIndex,typeClassInfo,newSymRef);
+	HeapNode n= new HeapNode(daIndex, typeClassInfo, newSymRef);
 	symInputHeap._add(n);
 
 	return daIndex;
