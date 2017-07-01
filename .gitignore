@@ -11,3 +11,4 @@
 ## Specific files
 .hg
 .version
+jpf-*/build
