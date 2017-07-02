@@ -37,7 +37,7 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-enum SeplogicBinop {
+public enum SeplogicBinop {
     EQ("="),
     NE("!=");
 

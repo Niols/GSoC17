@@ -49,6 +49,23 @@ public class SeplogicRecord implements SeplogicValue {
 	this.keys = keys.clone();
 	this.values = values.clone();
     }
+
+    public SeplogicRecord update(String key, SeplogicVariable value) {
+
+	String[] new_keys = keys.clone();
+	SeplogicVariable[] new_values = values.clone();
+	
+	for (int i = 0; i < cardinal; i++) {
+	    if (new_keys[i].equals(key)) {
+		new_values[i] = value;
+
+		return new SeplogicRecord(new_keys, new_values);
+	    }
+	}
+
+	assert false;
+	return this; //never reached
+    }
     
     public String toString() {
 	if (cardinal == 0)

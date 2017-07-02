@@ -46,6 +46,14 @@ public class PointstoExpr implements SeplogicExpression {
 	this.v = v;
     }
     
+    public SeplogicVariable getVariable() {
+	return l;
+    }
+
+    public SeplogicValue getValue() {
+	return v;
+    }
+    
     public String toString() {
 	return l.toString() + " -> " + v.toString();
     }

@@ -19,15 +19,18 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import java.util.LinkedList;
-import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
-import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
-import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.*;
+// import gov.nasa.jpf.symbc.seplogic.SeplogicBinop;
+// import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+// import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
+// import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+// import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class PathCondition {
-    private LinkedList<SeplogicExpression> separatedConstraints;
+    private LinkedList<SeplogicExpression> constraints;
 
-    public PathCondition(LinkedList<SeplogicExpression> separatedConstraints) {
-	this.separatedConstraints = separatedConstraints;
+    public PathCondition(LinkedList<SeplogicExpression> constraints) {
+	this.constraints = constraints;
     }
     
     public PathCondition() {
@@ -36,11 +39,11 @@ public class PathCondition {
 
     public SeplogicExpression toSeplogicExpression() {
 	SeplogicExpression[] dummy = {};
-	return SL.Star(separatedConstraints.toArray(dummy));
+	return SL.Star(constraints.toArray(dummy));
     }
 
     public PathCondition copy() {
-	return new PathCondition((LinkedList<SeplogicExpression>) separatedConstraints.clone());
+	return new PathCondition((LinkedList<SeplogicExpression>) constraints.clone());
     }
 
     public String toString() {
@@ -49,10 +52,25 @@ public class PathCondition {
     }
 
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
-	System.out.println("In PC: Here, we should update the constraint to reflect the fact that, now:\n    " + l + "." + f + " -> " + v);
+
+	for (int i = 0; i < constraints.size(); i++) {
+	    SeplogicExpression e = constraints.get(i);
+	    
+	    if (e instanceof BinopExpr) {
+		BinopExpr be = (BinopExpr) e;
+
+		if (be.getOp() == SeplogicBinop.EQ && be.getLhs().equals(l)) {
+		    SeplogicRecord r = (SeplogicRecord) be.getRhs();
+		    constraints.set(i, SL.Eq(l, r.update(f, v)));
+		    return;
+		}
+	    }
+	}
+
+	assert false;
     }
     
     public void _star(SeplogicExpression e) {
-	separatedConstraints.add(e);
+	constraints.add(e);
     }
 }

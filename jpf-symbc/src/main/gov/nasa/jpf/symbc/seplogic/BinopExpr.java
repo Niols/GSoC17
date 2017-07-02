@@ -48,6 +48,18 @@ public class BinopExpr implements SeplogicExpression {
 	this.v = v;
     }
 
+    public SeplogicBinop getOp() {
+	return b;
+    }
+    
+    public SeplogicVariable getLhs() {
+	return l;
+    }
+
+    public SeplogicValue getRhs() {
+	return v;
+    }
+    
     public String toString() {
 	return l.toString() + " " + b.toString() + " " + v.toString();
     }
