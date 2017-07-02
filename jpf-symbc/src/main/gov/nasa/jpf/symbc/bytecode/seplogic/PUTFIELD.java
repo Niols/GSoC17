@@ -60,7 +60,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	if (objRef == MJIEnv.NULL) {
 	    return ti.createAndThrowException("java.lang.NullPointerException", "referencing field '" + fname + "' on null object");
 	}
-	
+
 	ElementInfo ei = ti.getModifiableElementInfo(objRef);
 	FieldInfo fi = getFieldInfo();
 	if (fi == null) {
@@ -68,7 +68,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	}
 
 	/* Perform the update */
-	
+
 	Object opAttr = frame.getOperandAttr();
 	int opVal = frame.peek();
 
@@ -82,19 +82,8 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	ChoiceGenerator<?> thisHeapCG = ti.getVM().getSystemState().getLastChoiceGeneratorOfType(HeapChoiceGenerator.class);
 
 	if (thisHeapCG != null && thisHeapCG instanceof HeapChoiceGenerator) {
-	    PathCondition PC;
-	    SymbolicInputHeap symInputHeap;
-
-	    ChoiceGenerator<?> prevHeapCG = thisHeapCG.getPreviousChoiceGeneratorOfType(HeapChoiceGenerator.class);
-
-	    if (prevHeapCG == null) {
-		PC = new PathCondition();
-		symInputHeap = new SymbolicInputHeap();
-	    }
-	    else {
-		PC = ((HeapChoiceGenerator) prevHeapCG).getCurrentPC();
-		symInputHeap = ((HeapChoiceGenerator) prevHeapCG).getCurrentSymInputHeap();
-	    }
+	    PathCondition PC = ((HeapChoiceGenerator) thisHeapCG).getCurrentPC();
+	    SymbolicInputHeap symInputHeap = ((HeapChoiceGenerator) thisHeapCG).getCurrentSymInputHeap();
 
 	    assert PC != null;
 	    assert symInputHeap != null;
@@ -129,7 +118,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	     *
 	     * - objRef in symbolic and opVal is concrete. In that
 	     *   case, we can add a fresh variable to fill in the
-	     *   blanks.
+	     *   blanks. However, by doing so, we loose information!
 	     *
 	     * FIXME: is that valid? */
 
@@ -142,14 +131,17 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger()));
 	    }
 
+	    ((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
+	    ((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
+
 	    if (SymbolicInstructionFactory.seplogicDebugMode)
 		System.out.println("PUTFIELD: " + PC);
 
 	}
-	
+
 	/* FIXME: handle shared objects, handle 'long' operands. */
-	
-	popOperands(frame);      
-	return getNext();
+
+	popOperands(frame);
+	return getNext(ti);
     }
 }
