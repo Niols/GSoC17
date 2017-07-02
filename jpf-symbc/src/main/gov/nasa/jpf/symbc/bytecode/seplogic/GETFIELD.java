@@ -170,7 +170,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 	    daIndex = candidateNode.getIndex();
 
-	    PC._star(SL.Pointsto((SymbolicInteger) attr, candidateNode.getSymbolic()));
+	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNode.getSymbolic()));
 	}
 	else if (currentChoice == numSymRefs){ //null object
 	    daIndex = MJIEnv.NULL;
@@ -185,7 +185,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
-	    PC._star(SL.Pointsto((SymbolicInteger) attr, freshNode));
+	    PC._star(SL.Eq((SymbolicInteger) attr, freshNode));
 	}
 	else {
 	    System.err.println("subtyping not handled");
