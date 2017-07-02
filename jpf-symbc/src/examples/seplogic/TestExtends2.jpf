@@ -1,0 +1,11 @@
+target = seplogic.TestExtends2
+
+classpath = ${jpf-symbc}/build/examples
+sourcepath = ${jpf-symbc}/src/examples
+type_classpath = ${jpf-symbc}/build/examples/seplogic
+
+search.multiple_errors = true
+symbolic.seplogic = true
+symbolic.seplogic.debug = true
+
+symbolic.method = seplogic.TestExtends2.swap2(sym#sym)
