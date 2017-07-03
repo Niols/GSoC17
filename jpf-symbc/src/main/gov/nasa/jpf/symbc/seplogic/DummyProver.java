@@ -37,39 +37,13 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    
-    public SeplogicVariable(SymbolicInteger n) {
-	this.n = n;
+public class DummyProver implements SeplogicProver {
+    public DummyProver() {
+	// throw exception
     }
 
-    public String toString() {
-	int code = n.hashCode();
-
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
-
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (n.equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+    public boolean isSatisfiable(SeplogicExpression e) {
+	// FIXME: throw exception
+	return true;
     }
 }

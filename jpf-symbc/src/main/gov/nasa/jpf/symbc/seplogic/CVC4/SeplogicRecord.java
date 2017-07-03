@@ -35,41 +35,20 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.CVC4;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import edu.nyu.acsys.CVC4.Expr;
+import edu.nyu.acsys.CVC4.ExprManager;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    
-    public SeplogicVariable(SymbolicInteger n) {
-	this.n = n;
+public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CVC4Convertible {
+
+    public SeplogicRecord(String[] keys, gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values) {
+	super(keys, values);
     }
 
-    public String toString() {
-	int code = n.hashCode();
+    public Expr toCVC4Expr(ExprManager em) {
 
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
-
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (n.equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+	return em.mkConst(true); //FIXME!!!
     }
 }

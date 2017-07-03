@@ -70,6 +70,10 @@ public class StarExpr implements SeplogicExpression {
 	return this;
     }
 
+    public SeplogicExpression[] getExprs() {
+	return exprs.clone();
+    }
+
     public SeplogicExpression simplify() {
 	SeplogicExpression[] new_exprs = new SeplogicExpression[exprs.length];
 
@@ -82,7 +86,7 @@ public class StarExpr implements SeplogicExpression {
 	    if (new_exprs[i] instanceof FalseExpr)
 		hasFalse = true;
 	if (hasFalse)
-	    return new FalseExpr();
+	    return SL.False();
 
 	// Cleanup the True (and NULL) in the array FIXME: much easier
 	// to implement by using a function Array -> Array that cleans
@@ -102,14 +106,14 @@ public class StarExpr implements SeplogicExpression {
 		}
 	    }
 	    if (new_new_exprs.length == 0)
-		return new TrueExpr();
+		return SL.True();
 	    else if (new_new_exprs.length == 1)
 		return new_new_exprs[0];
 	    else
-		return new StarExpr(new_new_exprs);
+		return SL.Star(new_new_exprs);
 	}
 
-	return new StarExpr(new_exprs);
+	return SL.Star(new_exprs);
     }
     
     // Specific to StarExpr
@@ -144,6 +148,6 @@ public class StarExpr implements SeplogicExpression {
 	    }
 	}
 
-	return new StarExpr(new_exprs);
+	return SL.Star(new_exprs);
     }
 }

@@ -37,9 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-enum ProverBackend {
-    None("None");
-    //CVC4("CVC4");
+public enum ProverBackend {
+    None("None"),
+    CVC4("CVC4");
 
     private final String repr;
 

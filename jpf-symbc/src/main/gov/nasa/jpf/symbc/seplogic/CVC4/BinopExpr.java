@@ -35,41 +35,34 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.CVC4;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SeplogicBinop;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    
-    public SeplogicVariable(SymbolicInteger n) {
-	this.n = n;
-    }
+/* CVC4 imports */
+import edu.nyu.acsys.CVC4.Expr;
+import edu.nyu.acsys.CVC4.ExprManager;
+import edu.nyu.acsys.CVC4.Kind;
 
-    public String toString() {
-	int code = n.hashCode();
+public class BinopExpr extends gov.nasa.jpf.symbc.seplogic.BinopExpr implements SeplogicExpression, CVC4Convertible {
 
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
+    public BinopExpr(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
+	super(b, l, v);
     }
     
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
+    public Expr toCVC4Expr(ExprManager em) {
 
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (n.equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+	Expr lExpr = ((CVC4Convertible) getLhs()).toCVC4Expr(em);
+	Expr vExpr = ((CVC4Convertible) getRhs()).toCVC4Expr(em);
+	
+	switch(getOp()) {
+	case EQ: return em.mkExpr(Kind.EQUAL, lExpr, vExpr);
+	case NE: return em.mkExpr(Kind.NOT, em.mkExpr(Kind.EQUAL, lExpr, vExpr));
+	default: return null; // FIXME: throw exception
+	}
     }
 }

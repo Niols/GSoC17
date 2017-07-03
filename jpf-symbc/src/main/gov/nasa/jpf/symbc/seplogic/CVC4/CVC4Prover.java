@@ -35,41 +35,46 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.CVC4;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
+import edu.nyu.acsys.CVC4.Expr;
+import edu.nyu.acsys.CVC4.ExprManager;
+import edu.nyu.acsys.CVC4.SmtEngine;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
+public class CVC4Prover implements SeplogicProver {
+    public CVC4Prover() {
+	// FIXME
+    }
+
+    /* Getters for the ExprManager and SmtEngine of CVC4. We cache
+     * them, because we don't want to spawn a new prover everytime. */
     
-    public SeplogicVariable(SymbolicInteger n) {
-	this.n = n;
+    private static ExprManager em = null;
+    public static ExprManager getExprManager() {
+	if (em == null)
+	    em = new ExprManager();
+	return em;
     }
 
-    public String toString() {
-	int code = n.hashCode();
-
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
+    private static SmtEngine smt = null;
+    public static SmtEngine getSmtEngine() {
+	if (smt == null)
+	    smt = new SmtEngine(getExprManager());
+	return smt;
     }
+
+    /* And what we waited for... the isSatisfiable method. */
     
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
+    @Override
+    public boolean isSatisfiable(SeplogicExpression e) {
 
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (n.equals(v.getSymbolic()));
-    }
+	Expr formula = ((CVC4Convertible) e).toCVC4Expr(getExprManager());
 
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+	System.out.println("CVC4Prover: Checking validity of: " + formula);
+	System.out.println("CVC4Prover: Result from CVC4 is: " + getSmtEngine().query(formula));
+	
+	return true;
     }
 }

@@ -3,21 +3,21 @@
  * Administrator of the National Aeronautics and Space Administration.
  * All rights reserved.
  *
- * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License,
+ * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License, 
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0.
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0. 
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * See the License for the specific language governing permissions and 
  * limitations under the License.
  */
 
 //
-//Copyright (C) 2006 United States Government as represented by the
+//Copyright (C) 2005 United States Government as represented by the
 //Administrator of the National Aeronautics and Space Administration
 //(NASA).  All Rights Reserved.
 //
@@ -35,41 +35,37 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.CVC4;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import edu.nyu.acsys.CVC4.Expr;
+import edu.nyu.acsys.CVC4.ExprManager;
+import edu.nyu.acsys.CVC4.Kind;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    
-    public SeplogicVariable(SymbolicInteger n) {
-	this.n = n;
+public class StarExpr extends gov.nasa.jpf.symbc.seplogic.StarExpr implements SeplogicExpression, CVC4Convertible {
+
+    public StarExpr(SeplogicExpression[] exprs) {
+	super(exprs);
     }
 
-    public String toString() {
-	int code = n.hashCode();
-
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
+    public StarExpr(SeplogicExpression P, SeplogicExpression Q) {
+	super(P, Q);
     }
 
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (n.equals(v.getSymbolic()));
-    }
+    public Expr toCVC4Expr(ExprManager em) {
 
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+	SeplogicExpression[] exprs = getExprs();
+
+	if (exprs.length == 0) {
+	    return em.mkConst(true);
+	}
+	else {
+	    Expr currExpr = ((CVC4Convertible) exprs[0]).toCVC4Expr(em);
+	    
+	    for (int i = 1; i < exprs.length; i++)
+		currExpr = em.mkExpr(Kind.SEP_STAR, currExpr, ((CVC4Convertible) exprs[i]).toCVC4Expr(em));
+
+	    return currExpr;
+	}
     }
 }

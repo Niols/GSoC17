@@ -39,14 +39,14 @@ package gov.nasa.jpf.symbc.seplogic;
 
 import gov.nasa.jpf.vm.FieldInfo;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-//import config
+// FIXME: import config
 
 public class SL {
 
     private static ProverBackend backend = null;
     public static ProverBackend getBackend() {
 	if (backend == null) {
-	    // read config
+	    // FIXME: read config
 	    backend = ProverBackend.None;
 	}
 	return backend;
@@ -56,42 +56,101 @@ public class SL {
 
     public static PointstoExpr Pointsto(SeplogicVariable l, SeplogicValue v) {
 	switch(getBackend()) {
-	case None: return new      PointstoExpr(l, v);
-	    //case CVC4: return new CVC4.PointstoExpr(l, v);
+	case None: return new PointstoExpr(l, v);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.PointstoExpr(l, v);
+	default: return null; //FIXME: throw exception
 	}
-	return null; //FIXME: throw exception
     }
-    //FIXME: do the same for the others constructors
 
+    public static StarExpr Star(SeplogicExpression[] exprs) {
+	switch(getBackend()) {
+	case None: return new StarExpr(exprs);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(exprs);
+	default: return null; // FIXME: throw exception
+	}
+    }
+
+    public static StarExpr Star(SeplogicExpression P, SeplogicExpression Q) {
+	switch(getBackend()) {
+	case None: return new StarExpr(P, Q);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(P, Q);
+	default: return null;
+	}
+    }
+
+    public static BinopExpr Binop(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
+	switch(getBackend()) {
+	case None: return new BinopExpr(b, l, v);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.BinopExpr(b, l, v);
+	default: return null; // FIXME: throw exception
+	}
+    }
+
+    public static SeplogicVariable Variable(SymbolicInteger n) {
+	switch(getBackend()) {
+	case None: return new SeplogicVariable(n);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicVariable(n);
+	default: return null; // FIXME: throw exception
+	}
+    }
+
+    public static SeplogicRecord Record(String[] keys, SeplogicVariable[] values) {
+	switch(getBackend()) {
+	case None: return new SeplogicRecord(keys, values);
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicRecord(keys, values);
+	default: return null; // FIXME: throw exception
+	}
+    }
+
+    private static NullValue nullValue = null;
+    public static NullValue Null() {
+	if (nullValue == null) {
+	    switch(getBackend()) {
+	    case None: nullValue = new NullValue(); break;
+	    case CVC4: nullValue = new gov.nasa.jpf.symbc.seplogic.CVC4.NullValue(); break;
+	    default: nullValue = null; // FIXME: throw exception
+	    }
+	}
+	return nullValue.copy();
+    }
+
+    private static TrueExpr trueExpr = null;
+    public static TrueExpr True() {
+	if (trueExpr == null) {
+	    switch(getBackend()) {
+	    case None: trueExpr = new TrueExpr(); break;
+	    case CVC4: trueExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.TrueExpr(); break;
+	    default: trueExpr = null; // FIXME: throw exception
+	    }
+	}
+	return trueExpr.copy();
+    }
+
+    private static FalseExpr falseExpr = null;
+    public static FalseExpr False() {
+	if (falseExpr == null) {
+	    switch(getBackend()) {
+	    case None: falseExpr = new FalseExpr(); break;
+	    case CVC4: falseExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.FalseExpr(); break;
+	    default: falseExpr = null; // FIXME: throw exception
+	    }
+	}
+	return falseExpr.copy();
+    }
 
     /* Convenient overloaded constructors */
-    
-    /* PointstoExpr */
 
+    /* PointstoExpr */
 
     public static PointstoExpr Pointsto(SymbolicInteger l, SeplogicValue v) {
 	return Pointsto(Variable(l), v);
     }
-    
+
     public static PointstoExpr Pointsto(SymbolicInteger l, SymbolicInteger v) {
 	return Pointsto(l, Variable(v));
     }
-    
-    /* StarExpr */
-    
-    public static StarExpr Star(SeplogicExpression[] exprs) {
-	return new StarExpr(exprs);
-    }
-
-    public static StarExpr Star(SeplogicExpression P, SeplogicExpression Q) {
-	return new StarExpr(P, Q);
-    }
 
     /* BinopExpr */
-    
-    public static BinopExpr Binop(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
-	return new BinopExpr(b, l, v);
-    }
 
     public static BinopExpr Eq(SeplogicVariable l, SeplogicValue v) {
 	return Binop(SeplogicBinop.EQ, l, v);
@@ -109,17 +168,7 @@ public class SL {
 	return Binop(SeplogicBinop.NE, l, v);
     }
 
-    /* SeplogicValue */
-
-    public static SeplogicVariable Variable(SymbolicInteger n) {
-	return new SeplogicVariable(n);
-    }
-
     /* SeplogicRecord */
-    
-    public static SeplogicRecord Record(String[] keys, SeplogicVariable[] values) {
-	return new SeplogicRecord(keys, values);
-    }
 
     public static SeplogicRecord Record(FieldInfo[] fields, SymbolicInteger[] integers) {
 	String[] keys = new String[fields.length];
@@ -131,21 +180,5 @@ public class SL {
 	    values[i] = Variable(integers[i]);
 
 	return Record(keys, values);
-    }
-    
-    private static NullValue nullValue = null;
-    public static NullValue Null() {
-	if (nullValue == null)
-	    nullValue = new NullValue();
-
-	return nullValue.copy();
-    }
-    
-    private static TrueExpr trueExpr = null;
-    public static TrueExpr True() {
-	if (trueExpr == null)
-	    trueExpr = new TrueExpr();
-
-	return trueExpr.copy();
     }
 }

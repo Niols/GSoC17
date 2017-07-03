@@ -43,44 +43,44 @@ public class SeplogicRecord implements SeplogicValue {
     private final int cardinal;
     private final String[] keys;
     private final SeplogicVariable[] values;
-    
+
     public SeplogicRecord(String[] keys, SeplogicVariable[] values) {
-	this.cardinal = keys.length; //FIXME
-	this.keys = keys.clone();
-	this.values = values.clone();
+       this.cardinal = keys.length; //FIXME
+       this.keys = keys.clone();
+       this.values = values.clone();
     }
 
     public SeplogicRecord update(String key, SeplogicVariable value) {
 
-	String[] new_keys = keys.clone();
-	SeplogicVariable[] new_values = values.clone();
-	
-	for (int i = 0; i < cardinal; i++) {
-	    if (new_keys[i].equals(key)) {
-		new_values[i] = value;
+       String[] new_keys = keys.clone();
+       SeplogicVariable[] new_values = values.clone();
 
-		return new SeplogicRecord(new_keys, new_values);
-	    }
-	}
+       for (int i = 0; i < cardinal; i++) {
+           if (new_keys[i].equals(key)) {
+               new_values[i] = value;
 
-	assert false;
-	return this; //never reached
+               return new SeplogicRecord(new_keys, new_values);
+           }
+       }
+
+       assert false;
+       return this; //never reached
     }
-    
+
     public String toString() {
-	if (cardinal == 0)
-	    return "{| |}";
-	
-	String repr = "{| ";
-	
-	for (int i = 0; i < cardinal - 1; i++) {
-	    repr += keys[i]+" = "+values[i].toString() + " ; ";
-	}
+       if (cardinal == 0)
+           return "{| |}";
 
-	return repr + keys[cardinal - 1] + " = " + values[cardinal - 1].toString() + " |}";
+       String repr = "{| ";
+
+       for (int i = 0; i < cardinal - 1; i++) {
+           repr += keys[i]+" = "+values[i].toString() + " ; ";
+       }
+
+       return repr + keys[cardinal - 1] + " = " + values[cardinal - 1].toString() + " |}";
     }
-    
+
     public SeplogicValue copy() {
-	return this;
+       return this;
     }
 }
