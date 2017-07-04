@@ -19,12 +19,8 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import java.util.LinkedList;
+
 import gov.nasa.jpf.symbc.seplogic.*;
-// import gov.nasa.jpf.symbc.seplogic.SeplogicBinop;
-// import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
-// import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
-// import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
-// import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class PathCondition {
     private LinkedList<SeplogicExpression> constraints;
@@ -47,7 +43,9 @@ public class PathCondition {
     }
 
     public String toString() {
+	System.out.println("isSatisfiabel: " + SL.getProver().isSatisfiable(toSeplogicExpression()));
 	return "PC: " + toSeplogicExpression().simplify().toString();
+	
 	//FIXME: write a 'public void simplify()' function
     }
 
@@ -72,5 +70,9 @@ public class PathCondition {
     
     public void _star(SeplogicExpression e) {
 	constraints.add(e);
+    }
+
+    public boolean isSatisfiable() {
+	return true;
     }
 }

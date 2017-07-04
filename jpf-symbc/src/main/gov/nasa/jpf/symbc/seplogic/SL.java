@@ -43,15 +43,27 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class SL {
 
+    private static void init () {
+    }
+    
     private static ProverBackend backend = null;
     public static ProverBackend getBackend() {
 	if (backend == null) {
 	    // FIXME: read config
-	    backend = ProverBackend.None;
+
+	    backend = ProverBackend.CVC4;
 	}
 	return backend;
     }
 
+    public static SeplogicProver getProver() {
+	switch(getBackend()) {
+	case None: return new DummyProver();
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.CVC4Prover();
+        default: return null; //FIXME: throw exception
+	}
+    }
+    
     /* Seplogic expressions and values constructors */
 
     public static PointstoExpr Pointsto(SeplogicVariable l, SeplogicValue v) {
