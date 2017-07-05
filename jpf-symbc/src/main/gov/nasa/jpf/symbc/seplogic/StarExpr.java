@@ -50,20 +50,24 @@ public class StarExpr implements SeplogicExpression {
 	exprs[1] = Q;
     }
 
-    public String toString() {
+    public String toString(boolean withTypes) {
 	if (exprs == null || exprs.length == 0)
 	    return "";
 
 	if (exprs.length == 1)
-	    return exprs[0].toString();
+	    return exprs[0].toString(withTypes);
 	
 	String repr = "(";
 	
 	for (int i = 0; i < exprs.length - 1; i++) {
-	    repr += exprs[i].toString() + ") * (";
+	    repr += exprs[i].toString(withTypes) + ") * (";
 	}
 
-	return repr + exprs[exprs.length - 1] + ")";
+	return repr + exprs[exprs.length - 1].toString(withTypes) + ")";
+    }
+
+    public String toString() {
+	return toString(false);
     }
 
     public StarExpr copy() {

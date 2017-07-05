@@ -48,6 +48,8 @@ import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
 import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+import gov.nasa.jpf.symbc.seplogic.UnknownVariableException;
 
 public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
@@ -193,7 +195,16 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = candidateNode.getIndex();	    
 
-	    PC._star(SL.Pointsto((SymbolicInteger) attr, candidateNode.getSymbolic()));
+	    SeplogicVariable candidateNodeVar;
+	    try {
+		candidateNodeVar = SL.Variable(candidateNode.getSymbolic());
+	    }
+	    catch (UnknownVariableException ex) {
+		System.err.println("ERROR: SHOULD NEVER HAPPEN."); //FIXME: kill SPF?
+		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType()); // FIXME: can't be
+	    }
+	    
+	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNodeVar.getType(), candidateNodeVar));
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
@@ -203,7 +214,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = MJIEnv.NULL;
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, SL.Null()));
+	    PC._star(SL.Eq((SymbolicInteger) attr, SL.IntType(), SL.Null()));
 	}
 	else if ((currentChoice == (prevSymRefs.length + 1) && !abstractClass)
 		 || (currentChoice == prevSymRefs.length && (((IntegerExpression) attr).toString()).contains("this"))) {
@@ -218,7 +229,16 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
-	    PC._star(SL.Pointsto((SymbolicInteger) attr, freshNode));
+	    SeplogicVariable freshNodeVar;
+	    try {
+		freshNodeVar = SL.Variable(freshNode);
+	    }
+	    catch (UnknownVariableException ex) {
+		System.err.println("ERROR: SHOULD NEVER HAPPEN."); //FIXME: kill SPF?
+		freshNodeVar = SL.Variable(freshNode, SL.IntType()); // FIXME: can't be
+	    }
+
+	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not

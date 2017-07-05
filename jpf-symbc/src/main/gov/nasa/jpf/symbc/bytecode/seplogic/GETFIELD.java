@@ -46,7 +46,8 @@ import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
 import gov.nasa.jpf.symbc.seplogic.SL;
-
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+import gov.nasa.jpf.symbc.seplogic.UnknownVariableException;
 
 public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
     
@@ -170,12 +171,21 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 	    daIndex = candidateNode.getIndex();
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNode.getSymbolic()));
+	    SeplogicVariable candidateNodeVar;
+	    try {
+		candidateNodeVar = SL.Variable(candidateNode.getSymbolic());
+	    }
+	    catch (UnknownVariableException ex) {
+		System.err.println("ERROR: SHOULD NOT HAPPEN."); // FIXME: kill SPF?
+		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType());
+	    }
+	    
+	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNodeVar.getType(), candidateNodeVar));
 	}
 	else if (currentChoice == numSymRefs){ //null object
 	    daIndex = MJIEnv.NULL;
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, SL.Null()));
+	    PC._star(SL.Eq((SymbolicInteger) attr, SL.IntType(), SL.Null()));
 	}
 	else if (currentChoice == (numSymRefs + 1) && !abstractClass) {
 	    // creates a new object with all fields symbolic and adds the object to SymbolicHeap
@@ -185,7 +195,16 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, freshNode));
+	    SeplogicVariable freshNodeVar;
+	    try {
+		freshNodeVar = SL.Variable(freshNode);
+	    }
+	    catch (UnknownVariableException ex) {
+		System.err.println("ERROR: SHOULD NOT HAPPEN."); // FIXME: kill SPF?
+		freshNodeVar = SL.Variable(freshNode, SL.IntType());
+	    }
+
+	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));		
 	}
 	else {
 	    System.err.println("subtyping not handled");

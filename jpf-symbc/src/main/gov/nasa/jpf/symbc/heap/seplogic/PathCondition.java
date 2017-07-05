@@ -54,22 +54,22 @@ public class PathCondition {
     }
 
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
-
+	//FIXME: handle aliasing.
+	
 	for (int i = 0; i < constraints.size(); i++) {
 	    SeplogicExpression e = constraints.get(i);
-	    
-	    if (e instanceof BinopExpr) {
-		BinopExpr be = (BinopExpr) e;
 
-		if (be.getOp() == SeplogicBinop.EQ && be.getLhs().equals(l)) {
-		    SeplogicRecord r = (SeplogicRecord) be.getRhs();
-		    constraints.set(i, SL.Eq(l, r.update(f, v)));
+	    if (e instanceof PointstoExpr) {
+		PointstoExpr pe = (PointstoExpr) e;
+
+		if (pe.getPointer().equals(l)) {
+		    SeplogicRecord r = (SeplogicRecord) pe.getTarget();
+		    constraints.set(i, SL.Pointsto(l, r.update(f, v)));
 		    return;
 		}
 	    }
 	}
-
-	assert false;
+	assert (false);
     }
     
     public void _star(SeplogicExpression e) {

@@ -55,11 +55,15 @@ public class SeplogicRecord implements SeplogicValue {
     }
 
     public String[] getKeys() {
-	return keys;
+	return keys.clone();
     }
 
+    public SeplogicType getType () {
+	return SL.RecordType(getKeys());
+    }
+    
     public SeplogicVariable[] getValues() {
-	return values;
+	return values.clone();
     }
     
     public SeplogicRecord update(String key, SeplogicVariable value) {
@@ -79,19 +83,23 @@ public class SeplogicRecord implements SeplogicValue {
        return this; //never reached
     }
 
-    public String toString() {
+    public String toString(boolean withTypes) {
        if (cardinal == 0)
            return "{| |}";
 
        String repr = "{| ";
 
        for (int i = 0; i < cardinal - 1; i++) {
-           repr += keys[i]+" = "+values[i].toString() + " ; ";
+           repr += keys[i]+" = "+values[i].toString(withTypes) + " ; ";
        }
 
-       return repr + keys[cardinal - 1] + " = " + values[cardinal - 1].toString() + " |}";
+       return repr + keys[cardinal - 1] + " = " + values[cardinal - 1].toString(withTypes) + " |}";
     }
 
+    public String toString() {
+	return toString(false);
+    }
+    
     public SeplogicValue copy() {
        return this;
     }

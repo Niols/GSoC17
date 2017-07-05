@@ -39,5 +39,7 @@ package gov.nasa.jpf.symbc.seplogic;
 
 public interface SeplogicValue {
     public String toString();
+    public String toString(boolean withTypes);
     public SeplogicValue copy();
+    public SeplogicType getType();
 }

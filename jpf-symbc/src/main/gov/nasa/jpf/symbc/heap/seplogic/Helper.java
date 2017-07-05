@@ -18,17 +18,7 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
-import gov.nasa.jpf.symbc.arrays.ArrayExpression;
-import gov.nasa.jpf.symbc.arrays.ArrayHeapNode;
-import gov.nasa.jpf.symbc.arrays.HelperResult;
-import gov.nasa.jpf.symbc.numeric.Comparator;
-import gov.nasa.jpf.symbc.numeric.Expression;
-import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.IntegerExpression;
-import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-import gov.nasa.jpf.symbc.numeric.SymbolicReal;
-import gov.nasa.jpf.symbc.string.StringSymbolic;
+/* JPF imports */
 import gov.nasa.jpf.vm.BooleanFieldInfo;
 import gov.nasa.jpf.vm.ClassInfo;
 import gov.nasa.jpf.vm.DoubleFieldInfo;
@@ -41,10 +31,26 @@ import gov.nasa.jpf.vm.LongFieldInfo;
 import gov.nasa.jpf.vm.ReferenceFieldInfo;
 import gov.nasa.jpf.vm.StaticElementInfo;
 import gov.nasa.jpf.vm.ThreadInfo;
+
+/* SPF imports */
+import gov.nasa.jpf.symbc.arrays.ArrayExpression;
+import gov.nasa.jpf.symbc.arrays.ArrayHeapNode;
+import gov.nasa.jpf.symbc.arrays.HelperResult;
+import gov.nasa.jpf.symbc.numeric.Comparator;
+import gov.nasa.jpf.symbc.numeric.Expression;
+import gov.nasa.jpf.symbc.numeric.IntegerConstant;
+import gov.nasa.jpf.symbc.numeric.IntegerExpression;
+import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.numeric.SymbolicReal;
+import gov.nasa.jpf.symbc.string.StringSymbolic;
 import gov.nasa.jpf.symbc.heap.HeapNode;
 import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
+
+/* SPF+SL imports */
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
 import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
 
 public class Helper {
 
@@ -202,7 +208,8 @@ public class Helper {
 	    superClass = superClass.getSuperClass();
 	}
 
-	PC._star(SL.Eq(newSymRef, SL.Record(fields, symbolicIntegers)));
+	SeplogicRecord r = SL.Record(fields, symbolicIntegers);
+	PC._star(SL.Pointsto(newSymRef, r));
 
 	// create new HeapNode based on above info
 	// update associated symbolic input heap

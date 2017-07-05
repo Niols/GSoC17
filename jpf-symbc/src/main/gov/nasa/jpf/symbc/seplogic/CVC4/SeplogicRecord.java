@@ -54,12 +54,7 @@ public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord i
 
     public Expr toCVC4Expr(ExprManager em) {
 
-	vectorPairStringType v = new vectorPairStringType();
-	String[] keys = getKeys();	
-	for (int i = 0; i < getCardinal(); i++)
-	    v.add(new pairStringType(keys[i], em.integerType()));
-	
-	Type t = em.mkRecordType(new Record(v));
+	((CVC4ConvertibleType) getType()).toCVC4Type(em);
 	
 	return em.mkConst(new Rational(-2)); //FIXME!!!
     }

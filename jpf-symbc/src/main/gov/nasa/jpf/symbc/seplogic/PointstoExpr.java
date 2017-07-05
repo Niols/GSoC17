@@ -47,15 +47,29 @@ public class PointstoExpr implements SeplogicExpression {
     }
     
     public SeplogicVariable getVariable() {
+	//FIXME: remove
 	return l;
     }
 
     public SeplogicValue getValue() {
+	//FIXME: remove
+	return v;
+    }
+
+    public SeplogicVariable getPointer() {
+	return l;
+    }
+
+    public SeplogicValue getTarget() {
 	return v;
     }
     
+    public String toString(boolean withTypes) {
+	return l.toString(withTypes) + " -> " + v.toString(withTypes);
+    }
+
     public String toString() {
-	return l.toString() + " -> " + v.toString();
+	return toString(false);
     }
     
     public SeplogicExpression copy() {

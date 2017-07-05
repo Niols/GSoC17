@@ -60,8 +60,12 @@ public class BinopExpr implements SeplogicExpression {
 	return v;
     }
     
+    public String toString(boolean withTypes) {
+	return l.toString(withTypes) + " " + b.toString() + " " + v.toString(withTypes);
+    }
+
     public String toString() {
-	return l.toString() + " " + b.toString() + " " + v.toString();
+	return toString(false);
     }
 
     public SeplogicExpression copy() {

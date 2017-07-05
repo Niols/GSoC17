@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.LinkedList;
+
 /* JPF imports */
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.vm.FieldInfo;
@@ -48,29 +50,30 @@ public class SL {
 
     public static boolean enabled;
     public static boolean debugMode;
-
     private static ProverBackend backend = ProverBackend.None;
-    
+
+    private static LinkedList<SeplogicVariable> knownVariables = null;
+
     public static void init (Config conf) {
 
 	enabled = conf.getBoolean("symbolic.seplogic", false);
-	
+
 	debugMode = conf.getBoolean("symbolic.debug", false)
 	    || conf.getBoolean("symbolic.seplogic.debug", false);
-	
+
 	String[] confBackend = conf.getStringArray("symbolic.seplogic.backend");
 	if (confBackend != null) {
 	    switch(confBackend[0].toLowerCase()) {
-		
+
 	    case "none":
 		backend = ProverBackend.None;
 		break;
-		
+
 	    case "cvc4":
 		backend = ProverBackend.CVC4;
 		System.loadLibrary("cvc4jni");
 		break;
-		
+
 	    default:
 		System.out.println("Unknown prover backend: " + confBackend[0]);
 	    }
@@ -82,9 +85,11 @@ public class SL {
 	    System.out.println("symbolic.seplogic.backend=" + backend);
 
 	    System.out.println("Smoke detector:");
-	    
-	    SeplogicVariable p = SL.Variable(new SymbolicInteger());
-	    SeplogicVariable q = SL.Variable(new SymbolicInteger());
+
+	    knownVariables = new LinkedList<SeplogicVariable>();
+
+	    SeplogicVariable p = SL.Variable(new SymbolicInteger(), IntType());
+	    SeplogicVariable q = SL.Variable(new SymbolicInteger(), IntType());
 	    SeplogicExpression unsat = SL.Star(Eq(p, q), Ne(p, q));
 	    System.out.println("| (" + unsat + ") shoud not be satisfiable. Is it? " +
 			       (getProver().isSatisfiable(unsat) ? "yes" : "no"));
@@ -94,66 +99,64 @@ public class SL {
 			       (getProver().isSatisfiable(sat) ? "yes" : "no"));
 	}
     }
-    
+
     public static ProverBackend getBackend() {
 	return backend;
     }
 
     public static SeplogicProver getProver() {
 	switch(getBackend()) {
-	case None: return new DummyProver();
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.CVC4Prover();
-        default: return null; //FIXME: throw exception
+	case None: default: return new DummyProver();
 	}
     }
-    
+
     /* Seplogic expressions and values constructors */
 
     public static PointstoExpr Pointsto(SeplogicVariable l, SeplogicValue v) {
 	switch(getBackend()) {
-	case None: return new PointstoExpr(l, v);
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.PointstoExpr(l, v);
-	default: return null; //FIXME: throw exception
+	case None: default: return new PointstoExpr(l, v);
 	}
     }
 
     public static StarExpr Star(SeplogicExpression[] exprs) {
 	switch(getBackend()) {
-	case None: return new StarExpr(exprs);
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(exprs);
-	default: return null; // FIXME: throw exception
+	case None: default: return new StarExpr(exprs);
 	}
     }
 
     public static StarExpr Star(SeplogicExpression P, SeplogicExpression Q) {
 	switch(getBackend()) {
-	case None: return new StarExpr(P, Q);
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(P, Q);
-	default: return null;
+	case None: default: return new StarExpr(P, Q);
 	}
     }
 
     public static BinopExpr Binop(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
 	switch(getBackend()) {
-	case None: return new BinopExpr(b, l, v);
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.BinopExpr(b, l, v);
-	default: return null; // FIXME: throw exception
+	case None: default: return new BinopExpr(b, l, v);
 	}
     }
 
-    public static SeplogicVariable Variable(SymbolicInteger n) {
+    public static SeplogicVariable Variable(SymbolicInteger n, SeplogicType t) {
+	SeplogicVariable v;
+
 	switch(getBackend()) {
-	case None: return new SeplogicVariable(n);
-	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicVariable(n);
-	default: return null; // FIXME: throw exception
+	case CVC4: v = new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicVariable(n, t); break;
+	case None: default: v = new SeplogicVariable(n, t); break;
 	}
+
+	knownVariables.add(v);
+	return v;
     }
 
     public static SeplogicRecord Record(String[] keys, SeplogicVariable[] values) {
 	switch(getBackend()) {
-	case None: return new SeplogicRecord(keys, values);
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicRecord(keys, values);
-	default: return null; // FIXME: throw exception
+	case None: default: return new SeplogicRecord(keys, values);
 	}
     }
 
@@ -161,9 +164,8 @@ public class SL {
     public static NullValue Null() {
 	if (nullValue == null) {
 	    switch(getBackend()) {
-	    case None: nullValue = new NullValue(); break;
 	    case CVC4: nullValue = new gov.nasa.jpf.symbc.seplogic.CVC4.NullValue(); break;
-	    default: nullValue = null; // FIXME: throw exception
+	    case None: default: nullValue = new NullValue(); break;
 	    }
 	}
 	return nullValue.copy();
@@ -173,9 +175,8 @@ public class SL {
     public static TrueExpr True() {
 	if (trueExpr == null) {
 	    switch(getBackend()) {
-	    case None: trueExpr = new TrueExpr(); break;
 	    case CVC4: trueExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.TrueExpr(); break;
-	    default: trueExpr = null; // FIXME: throw exception
+	    case None: default: trueExpr = new TrueExpr(); break;
 	    }
 	}
 	return trueExpr.copy();
@@ -185,24 +186,53 @@ public class SL {
     public static FalseExpr False() {
 	if (falseExpr == null) {
 	    switch(getBackend()) {
-	    case None: falseExpr = new FalseExpr(); break;
 	    case CVC4: falseExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.FalseExpr(); break;
-	    default: falseExpr = null; // FIXME: throw exception
+	    case None: default: falseExpr = new FalseExpr(); break;
 	    }
 	}
 	return falseExpr.copy();
     }
 
+    /* Types */
+
+    public static IntType IntType() {
+	switch(getBackend()) {
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.IntType();
+	case None: default: return new IntType();
+	}
+    }
+
+    public static RecordType RecordType(String[] keys) {
+	switch(getBackend()) {
+	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.RecordType(keys);
+	case None: default: return new RecordType(keys);
+	}
+    }
+
     /* Convenient overloaded constructors */
+
+    /* Variable */
+
+    public static SeplogicVariable Variable(SymbolicInteger n) throws UnknownVariableException {
+	for (SeplogicVariable v : knownVariables) {
+	    if (v.getSymbolic().equals(n))
+		return v;
+	}
+	throw new UnknownVariableException();
+    }
 
     /* PointstoExpr */
 
-    public static PointstoExpr Pointsto(SymbolicInteger l, SeplogicValue v) {
-	return Pointsto(Variable(l), v);
+    public static PointstoExpr Pointsto(SymbolicInteger n, SeplogicValue v) {
+	return Pointsto(Variable(n, SL.IntType()), v);
     }
 
-    public static PointstoExpr Pointsto(SymbolicInteger l, SymbolicInteger v) {
-	return Pointsto(l, Variable(v));
+    public static PointstoExpr Pointsto(SymbolicInteger n, SymbolicInteger v, SeplogicType t) {
+	return Pointsto(n, Variable(v, t));
+    }
+
+    public static PointstoExpr Pointsto(SymbolicInteger n, SymbolicInteger v) throws UnknownVariableException {
+	return Pointsto(n, Variable(v));
     }
 
     /* BinopExpr */
@@ -211,12 +241,20 @@ public class SL {
 	return Binop(SeplogicBinop.EQ, l, v);
     }
 
-    public static BinopExpr Eq(SymbolicInteger l, SeplogicValue v) {
-	return Eq(Variable(l), v);
+    public static BinopExpr Eq(SymbolicInteger n, SeplogicType t, SeplogicValue v) {
+	return Eq(Variable(n, t), v);
     }
 
-    public static BinopExpr Eq(SymbolicInteger l, SymbolicInteger v) {
-	return Eq(l, Variable(v));
+    public static BinopExpr Eq(SymbolicInteger n, SeplogicType t, SymbolicInteger m, SeplogicType s) {
+	return Eq(n, t, Variable(m, s));
+    }
+
+    public static BinopExpr Eq(SymbolicInteger n, SeplogicValue v) throws UnknownVariableException {
+	return Eq(Variable(n), v);
+    }
+
+    public static BinopExpr Eq(SymbolicInteger n, SymbolicInteger m) throws UnknownVariableException {
+	return Eq(n, Variable(m));
     }
 
     public static BinopExpr Ne(SeplogicVariable l, SeplogicValue v) {
@@ -232,8 +270,9 @@ public class SL {
 
 	SeplogicVariable[] values = new SeplogicVariable[integers.length];
 	for (int i = 0; i < integers.length; i++)
-	    values[i] = Variable(integers[i]);
+	    values[i] = Variable(integers[i], IntType());
 
 	return Record(keys, values);
     }
+
 }

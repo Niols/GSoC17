@@ -127,8 +127,11 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 		 * opVal (either opValNode is not null, or a fresh
 		 * one), and update the field in the PC. */
 
-		PC.updateField(SL.Variable(objRefNode), fname,
-			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger()));
+		/* Since we are updating a field, we know that both
+		 * our variables are of type int. */
+		
+		PC.updateField(SL.Variable(objRefNode, SL.IntType()), fname,
+			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger(), SL.IntType()));
 	    }
 
 	    ((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);

@@ -39,9 +39,17 @@ package gov.nasa.jpf.symbc.seplogic;
 
 public class NullValue implements SeplogicValue {
     public NullValue() {}
-    
-    public String toString() {
+
+    public String toString(boolean withTypes) {
 	return "null";
+    }
+
+    public String toString() {
+	return toString(false);
+    }
+
+    public SeplogicType getType() {
+	return SL.IntType();
     }
     
     public NullValue copy() {

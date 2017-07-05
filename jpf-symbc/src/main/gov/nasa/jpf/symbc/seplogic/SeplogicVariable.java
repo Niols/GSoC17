@@ -41,20 +41,32 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class SeplogicVariable implements SeplogicValue {
     private final SymbolicInteger n; //FIXME: emancipate!
+    private final SeplogicType t;
     
-    public SeplogicVariable(SymbolicInteger n) {
+    public SeplogicVariable(SymbolicInteger n, SeplogicType t) {
 	this.n = n;
+	this.t = t;
+    }
+
+    public String toString(boolean withTypes) {
+	int code = n.hashCode();
+	String repr;
+	
+	if (code < 26)
+	    /* Try to print a letter of the alphabet. */
+	    repr = String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
+	else
+	    /* If you can't, fall back on the integer value. */
+	    repr = "?" + String.valueOf(code);
+
+	if (withTypes)
+	    repr += " : " + getType().toString();
+
+	return repr;
     }
 
     public String toString() {
-	int code = n.hashCode();
-
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    return String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    return "?" + String.valueOf(code);
+	return toString(false);
     }
     
     public SeplogicValue copy() {
@@ -63,6 +75,10 @@ public class SeplogicVariable implements SeplogicValue {
 
     public SymbolicInteger getSymbolic() {
 	return n;
+    }
+
+    public SeplogicType getType() {
+	return t;
     }
     
     public boolean equals(SeplogicVariable v) {

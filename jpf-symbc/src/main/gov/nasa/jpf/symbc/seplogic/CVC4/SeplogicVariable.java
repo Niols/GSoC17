@@ -37,23 +37,28 @@
 
 package gov.nasa.jpf.symbc.seplogic.CVC4;
 
+/* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicType;
+
+/* CVC4 imports */
 import edu.nyu.acsys.CVC4.Expr;
 import edu.nyu.acsys.CVC4.ExprManager;
 
 public class SeplogicVariable extends gov.nasa.jpf.symbc.seplogic.SeplogicVariable implements SeplogicValue, CVC4Convertible {
 
-    public SeplogicVariable(SymbolicInteger n) {
-	super(n);
+    public SeplogicVariable(SymbolicInteger n, SeplogicType t) {
+	super(n, t);
     }
     
     private Expr varCVC4 = null;
     public Expr toCVC4Expr(ExprManager em) {
-
+	
 	if (varCVC4 == null)
-	    varCVC4 = em.mkVar(toString(), em.integerType());
+	    varCVC4 = em.mkVar(toString(), ((CVC4ConvertibleType) getType()).toCVC4Type(em));
 
 	return varCVC4;
     }    

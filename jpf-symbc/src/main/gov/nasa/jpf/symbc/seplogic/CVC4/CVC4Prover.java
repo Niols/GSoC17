@@ -40,6 +40,7 @@ package gov.nasa.jpf.symbc.seplogic.CVC4;
 /* SPL+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
+import gov.nasa.jpf.symbc.seplogic.SL;
 
 /* CVC4 imports */
 import edu.nyu.acsys.CVC4.Expr;
@@ -85,6 +86,11 @@ public class CVC4Prover implements SeplogicProver {
     public boolean isSatisfiable(SeplogicExpression e) {
 	Expr formula = ((CVC4Convertible) e).toCVC4Expr(getExprManager());
 	Result result = getSmtEngine().checkSat(formula);
-	return (result.isSat() == Result.Sat.SAT);
+	boolean isSat = (result.isSat() == Result.Sat.SAT);
+
+	if (SL.debugMode)
+	    System.out.println("CVC4Prover: formula " + formula + " " + (isSat ? "IS" : "IS NOT") + " satisfiable.");
+	
+	return isSat;
     }
 }

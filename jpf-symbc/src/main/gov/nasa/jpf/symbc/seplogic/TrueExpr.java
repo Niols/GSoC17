@@ -40,8 +40,12 @@ package gov.nasa.jpf.symbc.seplogic;
 public class TrueExpr implements SeplogicExpression {
     public TrueExpr() {}
     
-    public String toString() {
+    public String toString(boolean withTypes) {
 	return "true";
+    }
+
+    public String toString() {
+	return toString(false);
     }
     
     public TrueExpr copy() {
