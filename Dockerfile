@@ -27,6 +27,8 @@ COPY jpf-symbc /root/jpf-symbc
 RUN ln /root/CVC4/builds/x86_64-pc-linux-gnu/production/src/bindings/CVC4.jar /root/jpf-symbc/lib
 RUN cd /root/jpf-symbc && ant build
 
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib/jni
+
 ## Prepare for interactive mode.
 WORKDIR /root
 ENTRYPOINT ["java", "-jar", "/root/jpf-core/build/RunJPF.jar", "+jpf-home=/root", "+jpf-core=/root/jpf-core", "+jpf-symbc=/root/jpf-symbc", "+extensions=${jpf-core},${jpf-symbc}"]
