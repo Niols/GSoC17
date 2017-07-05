@@ -50,6 +50,18 @@ public class SeplogicRecord implements SeplogicValue {
        this.values = values.clone();
     }
 
+    public int getCardinal() {
+	return cardinal;
+    }
+
+    public String[] getKeys() {
+	return keys;
+    }
+
+    public SeplogicVariable[] getValues() {
+	return values;
+    }
+    
     public SeplogicRecord update(String key, SeplogicVariable value) {
 
        String[] new_keys = keys.clone();
@@ -59,7 +71,7 @@ public class SeplogicRecord implements SeplogicValue {
            if (new_keys[i].equals(key)) {
                new_values[i] = value;
 
-               return new SeplogicRecord(new_keys, new_values);
+               return SL.Record(new_keys, new_values);
            }
        }
 

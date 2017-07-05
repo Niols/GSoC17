@@ -134,7 +134,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	    ((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	    ((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 
-	    if (SymbolicInstructionFactory.seplogicDebugMode)
+	    if (SL.debugMode)
 		System.out.println("PUTFIELD: " + PC);
 
 	}

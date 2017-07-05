@@ -33,6 +33,10 @@ public class PathCondition {
 	this(new LinkedList<SeplogicExpression>());
     }
 
+    private void reset() {
+	constraints = new LinkedList<SeplogicExpression>();
+    }
+    
     public SeplogicExpression toSeplogicExpression() {
 	SeplogicExpression[] dummy = {};
 	return SL.Star(constraints.toArray(dummy));
@@ -43,10 +47,10 @@ public class PathCondition {
     }
 
     public String toString() {
-	System.out.println("isSatisfiabel: " + SL.getProver().isSatisfiable(toSeplogicExpression()));
-	return "PC: " + toSeplogicExpression().simplify().toString();
+	boolean sat = SL.getProver().isSatisfiable(toSeplogicExpression());
+	if (! sat) { reset(); _star(SL.False()); }
 	
-	//FIXME: write a 'public void simplify()' function
+	return "PC[" + (sat ? " sat " : "unsat") + "]: " + toSeplogicExpression().simplify().toString();
     }
 
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {

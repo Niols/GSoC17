@@ -7,5 +7,6 @@ type_classpath = ${jpf-symbc}/build/examples/seplogic
 search.multiple_errors = true
 symbolic.seplogic = true
 symbolic.seplogic.debug = true
+symbolic.seplogic.backend = CVC4
 
 symbolic.method = seplogic.TestExtends2.swap2(sym#sym)

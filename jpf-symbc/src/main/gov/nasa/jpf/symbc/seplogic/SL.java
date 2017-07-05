@@ -37,22 +37,65 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+/* JPF imports */
+import gov.nasa.jpf.Config;
 import gov.nasa.jpf.vm.FieldInfo;
+
+/* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-// FIXME: import config
 
 public class SL {
 
-    private static void init () {
+    public static boolean enabled;
+    public static boolean debugMode;
+
+    private static ProverBackend backend = ProverBackend.None;
+    
+    public static void init (Config conf) {
+
+	enabled = conf.getBoolean("symbolic.seplogic", false);
+	
+	debugMode = conf.getBoolean("symbolic.debug", false)
+	    || conf.getBoolean("symbolic.seplogic.debug", false);
+	
+	String[] confBackend = conf.getStringArray("symbolic.seplogic.backend");
+	if (confBackend != null) {
+	    switch(confBackend[0].toLowerCase()) {
+		
+	    case "none":
+		backend = ProverBackend.None;
+		break;
+		
+	    case "cvc4":
+		backend = ProverBackend.CVC4;
+		System.loadLibrary("cvc4jni");
+		break;
+		
+	    default:
+		System.out.println("Unknown prover backend: " + confBackend[0]);
+	    }
+	}
+
+	if (debugMode) {
+	    System.out.println("symbolic.seplogic="+enabled);
+	    System.out.println("symbolic.seplogic.debug=" + debugMode);
+	    System.out.println("symbolic.seplogic.backend=" + backend);
+
+	    System.out.println("Smoke detector:");
+	    
+	    SeplogicVariable p = SL.Variable(new SymbolicInteger());
+	    SeplogicVariable q = SL.Variable(new SymbolicInteger());
+	    SeplogicExpression unsat = SL.Star(Eq(p, q), Ne(p, q));
+	    System.out.println("| (" + unsat + ") shoud not be satisfiable. Is it? " +
+			       (getProver().isSatisfiable(unsat) ? "yes" : "no"));
+
+	    SeplogicExpression sat = SL.Star(Eq(p, q), Eq(p, SL.Null()));
+	    System.out.println("| (" + sat + ") shoud be satisfiable. Is it? " +
+			       (getProver().isSatisfiable(sat) ? "yes" : "no"));
+	}
     }
     
-    private static ProverBackend backend = null;
     public static ProverBackend getBackend() {
-	if (backend == null) {
-	    // FIXME: read config
-
-	    backend = ProverBackend.CVC4;
-	}
 	return backend;
     }
 

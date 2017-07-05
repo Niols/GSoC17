@@ -40,11 +40,11 @@ package gov.nasa.jpf.symbc.seplogic.CVC4;
 import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 import edu.nyu.acsys.CVC4.Expr;
 import edu.nyu.acsys.CVC4.ExprManager;
-import edu.nyu.acsys.CVC4.Rational;
+import edu.nyu.acsys.CVC4.Kind;
 
 public class NullValue extends gov.nasa.jpf.symbc.seplogic.NullValue implements SeplogicValue, CVC4Convertible {
 
     public Expr toCVC4Expr(ExprManager em) {
-	return em.mkConst(new Rational(-1)); // FIXME: We probably want to use the 'as nil' instead of -1
+	return em.mkNullaryOperator(em.integerType(), Kind.SEP_NIL);
     }
 }

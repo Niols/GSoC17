@@ -6,5 +6,6 @@ type_classpath = ${jpf-symbc}/build/examples/seplogic
 
 symbolic.seplogic = true
 symbolic.seplogic.debug = true
+symbolic.seplogic.backend = CVC4
 
 symbolic.method = seplogic.TestALOAD.moreThanTwo(sym)

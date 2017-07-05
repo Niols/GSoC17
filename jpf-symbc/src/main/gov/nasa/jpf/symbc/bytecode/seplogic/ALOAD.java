@@ -235,8 +235,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	sf.setLocalAttr(index, null);
 	sf.push(daIndex, true);
 
-	if (SymbolicInstructionFactory.seplogicDebugMode)
-	    System.out.println("ALOAD: " + PC.toString());
+	if (SL.debugMode)
+	    System.out.println("ALOAD:    " + PC.toString());
 
 	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
 	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);

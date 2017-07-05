@@ -40,6 +40,11 @@ package gov.nasa.jpf.symbc.seplogic.CVC4;
 import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 import edu.nyu.acsys.CVC4.Expr;
 import edu.nyu.acsys.CVC4.ExprManager;
+import edu.nyu.acsys.CVC4.Type;
+import edu.nyu.acsys.CVC4.Rational;
+import edu.nyu.acsys.CVC4.Record;
+import edu.nyu.acsys.CVC4.vectorPairStringType;
+import edu.nyu.acsys.CVC4.pairStringType;
 
 public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CVC4Convertible {
 
@@ -49,6 +54,13 @@ public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord i
 
     public Expr toCVC4Expr(ExprManager em) {
 
-	return em.mkConst(true); //FIXME!!!
+	vectorPairStringType v = new vectorPairStringType();
+	String[] keys = getKeys();	
+	for (int i = 0; i < getCardinal(); i++)
+	    v.add(new pairStringType(keys[i], em.integerType()));
+	
+	Type t = em.mkRecordType(new Record(v));
+	
+	return em.mkConst(new Rational(-2)); //FIXME!!!
     }
 }

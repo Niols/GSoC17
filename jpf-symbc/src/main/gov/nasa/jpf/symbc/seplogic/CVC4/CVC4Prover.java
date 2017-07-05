@@ -37,10 +37,15 @@
 
 package gov.nasa.jpf.symbc.seplogic.CVC4;
 
+/* SPL+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
+
+/* CVC4 imports */
 import edu.nyu.acsys.CVC4.Expr;
 import edu.nyu.acsys.CVC4.ExprManager;
+import edu.nyu.acsys.CVC4.SExpr;
+import edu.nyu.acsys.CVC4.Result;
 import edu.nyu.acsys.CVC4.SmtEngine;
 
 public class CVC4Prover implements SeplogicProver {
@@ -58,10 +63,19 @@ public class CVC4Prover implements SeplogicProver {
 	return em;
     }
 
-    private static SmtEngine smt = null;
     public static SmtEngine getSmtEngine() {
-	if (smt == null)
-	    smt = new SmtEngine(getExprManager());
+	/* Notes:
+	 *
+	 * 1. We disable the incremental mode, because it is not
+	 *    compatible with separation logic.
+	 *
+	 * 2. We do not cache the SmtEngine, because querying it
+	 *    multiple times requires the incremental mode. 
+	 */
+	
+	SmtEngine smt = new SmtEngine(getExprManager());
+	smt.setOption("incremental", new SExpr("false"));
+	smt.setLogic("QF_ALL_SUPPORTED");
 	return smt;
     }
 
@@ -69,12 +83,8 @@ public class CVC4Prover implements SeplogicProver {
     
     @Override
     public boolean isSatisfiable(SeplogicExpression e) {
-
 	Expr formula = ((CVC4Convertible) e).toCVC4Expr(getExprManager());
-
-	System.out.println("CVC4Prover: Checking validity of: " + formula);
-	System.out.println("CVC4Prover: Result from CVC4 is: " + getSmtEngine().query(formula));
-	
-	return true;
+	Result result = getSmtEngine().checkSat(formula);
+	return (result.isSat() == Result.Sat.SAT);
     }
 }
