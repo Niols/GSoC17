@@ -888,6 +888,21 @@ void CvcPrinter::toStream(std::ostream& out, TNode n, int depth, bool types, boo
       out << "INST_PATTERN_LIST";
       break;
 
+  case kind::SEP_PTO:
+    op << "->";
+    opType = INFIX;
+    break;
+
+  case kind::SEP_STAR:
+    op << "*";
+    opType = INFIX;
+    break;
+
+  case kind::SEP_WAND:
+    op << "-*";
+    opType = INFIX;
+    break;
+
     default:
       Warning() << "Kind printing not implemented for the case of " << n.getKind() << endl;
       break;
