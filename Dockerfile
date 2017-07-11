@@ -17,10 +17,10 @@ RUN cd /root/jpf-core && ant build
 
 ## Get and build JPF-symbc.
 COPY jpf-symbc /root/jpf-symbc
-RUN cd /root/jpf-symbc/lib && tar xJf libcvc4.so.tar.xz
 RUN cd /root/jpf-symbc && ant build
 
-## Set up dynamic libraries path
+## Set up dynamic libraries
+RUN cd /root/jpf-symbc/lib && tar xJf libcvc4.so.tar.xz
 ENV LD_LIBRARY_PATH=/root/jpf-symbc/lib
 
 ## Prepare for interactive mode.
