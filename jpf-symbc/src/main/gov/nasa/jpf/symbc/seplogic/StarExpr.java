@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
 public class StarExpr implements SeplogicExpression {
     private final SeplogicExpression[] exprs;
 
@@ -153,5 +156,12 @@ public class StarExpr implements SeplogicExpression {
 	}
 
 	return SL.Star(new_exprs);
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> fv = new HashSet<SeplogicVariable>();
+	for (SeplogicExpression e : getExpressions())
+	    fv.addAll(e.getFreeVariables());
+	return fv;
     }
 }

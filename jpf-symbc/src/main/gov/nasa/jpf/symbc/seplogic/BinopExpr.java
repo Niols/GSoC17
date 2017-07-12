@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+
 public class BinopExpr implements SeplogicExpression {
     private final SeplogicBinop b;
     private final SeplogicVariable l;
@@ -80,5 +82,11 @@ public class BinopExpr implements SeplogicExpression {
 		return new FalseExpr();
 	}
 	return this;
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> fv = getLhs().getFreeVariables();
+	fv.addAll(getRhs().getFreeVariables());
+	return fv;
     }
 }

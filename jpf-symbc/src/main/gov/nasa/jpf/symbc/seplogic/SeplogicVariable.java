@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class SeplogicVariable implements SeplogicValue {
@@ -91,5 +94,11 @@ public class SeplogicVariable implements SeplogicValue {
 
     public boolean equals(Object o) {
 	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> s = new HashSet<SeplogicVariable>();
+	s.add(this);
+	return s;
     }
 }

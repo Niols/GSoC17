@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
 public class NullValue implements SeplogicValue {
     public NullValue() {}
 
@@ -54,5 +57,9 @@ public class NullValue implements SeplogicValue {
     
     public NullValue copy() {
 	return this;
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	return new HashSet<SeplogicVariable>();
     }
 }

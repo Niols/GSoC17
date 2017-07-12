@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
 public class SeplogicRecord implements SeplogicValue {
 
     //FIXME: would probably be better as a map
@@ -102,5 +105,12 @@ public class SeplogicRecord implements SeplogicValue {
     
     public SeplogicValue copy() {
        return this;
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> fv = new HashSet<SeplogicVariable>();
+	for (SeplogicValue v : getValues())
+	    fv.addAll(v.getFreeVariables());
+	return fv;
     }
 }

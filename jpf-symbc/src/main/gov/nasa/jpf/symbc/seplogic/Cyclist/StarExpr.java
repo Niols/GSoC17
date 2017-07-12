@@ -54,8 +54,8 @@ public class StarExpr extends gov.nasa.jpf.symbc.seplogic.StarExpr implements Se
 	String repr = "";
 	
 	for (int i = 0; i < exprs.length - 1; i++)
-	    repr += "(" + ((CyclistConvertible) exprs[i]).toCyclistString() + ") * ";
+	    repr += ((CyclistConvertible) exprs[i]).toCyclistString() + " * ";
 
-	return repr + "(" + ((CyclistConvertible) exprs[exprs.length-1]).toCyclistString() + ")";
+	return repr + ((CyclistConvertible) exprs[exprs.length-1]).toCyclistString();
     }
 }

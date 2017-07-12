@@ -94,13 +94,14 @@ public class SL {
 
 	    SeplogicVariable p = SL.Variable(new SymbolicInteger(), IntType());
 	    SeplogicVariable q = SL.Variable(new SymbolicInteger(), IntType());
-	    SeplogicExpression unsat = SL.Star(Eq(p, q), Ne(p, q));
-	    System.out.println("| (" + unsat + ") shoud not be satisfiable. Is it? " +
-			       (getProver().isSatisfiable(unsat) ? "yes" : "no"));
-
-	    SeplogicExpression sat = SL.Star(Eq(p, q), Eq(p, SL.Null()));
-	    System.out.println("| (" + sat + ") shoud be satisfiable. Is it? " +
-			       (getProver().isSatisfiable(sat) ? "yes" : "no"));
+	    SeplogicVariable a = SL.Variable(new SymbolicInteger(), IntType());
+	    SeplogicVariable b = SL.Variable(new SymbolicInteger(), IntType());
+	    
+	    SeplogicExpression unsat = SL.Star(SL.Star(Pointsto(p, a),Pointsto(p, b)),Ne(a, b));
+	    boolean isSat = getProver().isSatisfiable(unsat);
+	    System.out.println("[got:" + (getProver().isSatisfiable(unsat) ? " sat " : "unsat")
+			       + ",expected:" + "unsat" + "]"
+			       + " " + unsat);
 	}
     }
 

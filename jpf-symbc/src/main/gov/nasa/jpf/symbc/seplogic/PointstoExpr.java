@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+
 public class PointstoExpr implements SeplogicExpression {
     private final SeplogicVariable l;
     private final SeplogicValue v;
@@ -78,5 +80,11 @@ public class PointstoExpr implements SeplogicExpression {
 
     public SeplogicExpression simplify() {
 	return this.copy();
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> fv = getPointer().getFreeVariables();
+	fv.addAll(getTarget().getFreeVariables());
+	return fv;
     }
 }

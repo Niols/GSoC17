@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
 public class FalseExpr implements SeplogicExpression {
     public FalseExpr() {}
     
@@ -54,5 +57,9 @@ public class FalseExpr implements SeplogicExpression {
 
     public FalseExpr simplify() {
 	return this;
+    }
+
+    public Set<SeplogicVariable> getFreeVariables() {
+	return new HashSet<SeplogicVariable>();
     }
 }

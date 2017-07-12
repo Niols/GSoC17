@@ -37,6 +37,13 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+/* Java imports */
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 /* SPL+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
@@ -52,8 +59,63 @@ public class CyclistProver implements SeplogicProver {
 	String formula = ((CyclistConvertible) e).toCyclistString();
 
 	if (SL.debugMode)
-	    System.out.println("CyclistProver: formula is " + formula + ".");
+	    System.out.println("CyclistProver: formula is: " + formula);
 
-	return true;
+	String contents = "goal {\n  " + formula + " => goal(";
+	Object[] vars = e.getFreeVariables().toArray();
+	for (int i = 0; i < vars.length - 1; i++)
+	    contents += ((CyclistConvertible) vars[i]).toCyclistString() + ",";
+	contents += vars[vars.length-1] + ")\n}";
+
+	String filename = "/tmp/satcheck";
+
+	/* Write formula to file */
+	BufferedWriter bw = null;
+	FileWriter fw = null;
+	try {
+	    fw = new FileWriter(filename);
+	    bw = new BufferedWriter(fw);
+	    bw.write(contents);
+	}
+	catch (IOException ex) {
+	    ex.printStackTrace();
+	}
+	finally {
+	    try {
+		if (bw != null) bw.close();
+		if (fw != null) fw.close();
+	    } catch (IOException ex) {
+		ex.printStackTrace();
+	    }
+	}
+
+	boolean isSat = false;
+	
+	/* Run sl_satcheck on that file */
+	try {
+	    String[] cmd = {"sl_satcheck.native", "-D", filename};
+	    ProcessBuilder procBuilder = new ProcessBuilder(cmd);
+	    procBuilder.redirectErrorStream(true);
+	    Process proc = procBuilder.start();
+
+	    BufferedReader stdout = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+	    String line;
+	    while ((line = stdout.readLine()) != null) {
+		if (line.substring(0,3).equals("SAT")) {
+		    isSat = true;
+		    break;
+		}
+		else if (line.substring(0,5).equals("UNSAT")) {
+		    isSat = false;
+		    break;
+		}
+	    }
+	    stdout.close();
+	}
+	catch (IOException ex) {
+	    ex.printStackTrace();
+	}
+
+	return isSat;
     }
 }

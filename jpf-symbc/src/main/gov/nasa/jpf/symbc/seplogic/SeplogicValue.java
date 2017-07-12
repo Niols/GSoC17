@@ -37,9 +37,12 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Set;
+
 public interface SeplogicValue {
     public String toString();
     public String toString(boolean withTypes);
     public SeplogicValue copy();
     public SeplogicType getType();
+    public Set<SeplogicVariable> getFreeVariables();
 }
