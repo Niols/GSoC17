@@ -35,61 +35,24 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    private final SeplogicType t;
-    
-    public SeplogicVariable(SymbolicInteger n, SeplogicType t) {
-	this.n = n;
-	this.t = t;
+public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CyclistConvertible {
+
+    public SeplogicRecord(String[] keys, gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values) {
+	super(keys, values);
     }
 
-    public String toString(boolean withTypes) {
-	int code = hashCode();
-	String repr;
+    public String toCyclistString() {
+	String repr = "";
+
+	gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values = getValues();
 	
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    repr = String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    repr = "?" + String.valueOf(code);
+	for (int i = 0; i < values.length - 1; i++)
+	    repr += ((CyclistConvertible) values[i]).toCyclistString() + ",";
 
-	if (withTypes)
-	    repr += " : " + getType().toString();
-
-	return repr;
-    }
-
-    public int hashCode() {
-	return getSymbolic().hashCode();
-    }
-    
-    public String toString() {
-	return toString(false);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
-
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-
-    public SeplogicType getType() {
-	return t;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (getSymbolic().equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
+	return repr + ((CyclistConvertible) values[values.length-1]).toCyclistString();
     }
 }

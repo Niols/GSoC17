@@ -35,61 +35,30 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+/* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    private final SeplogicType t;
-    
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicType;
+
+public class SeplogicVariable extends gov.nasa.jpf.symbc.seplogic.SeplogicVariable implements SeplogicValue, CyclistConvertible {
+
     public SeplogicVariable(SymbolicInteger n, SeplogicType t) {
-	this.n = n;
-	this.t = t;
+	super(n, t);
     }
 
-    public String toString(boolean withTypes) {
-	int code = hashCode();
-	String repr;
-	
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    repr = String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    repr = "?" + String.valueOf(code);
-
-	if (withTypes)
-	    repr += " : " + getType().toString();
-
+    public String toCyclistString() {
+	int i = hashCode();
+	String repr = "";
+	while (i > 0) {
+	    repr += "pqrstuvwxyzabcdefghijklmno".charAt(i % 26);
+	    i = i / 26;
+	}
+	if (repr.equals(""))
+	    repr = "p";
 	return repr;
-    }
-
-    public int hashCode() {
-	return getSymbolic().hashCode();
-    }
-    
-    public String toString() {
-	return toString(false);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
-
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-
-    public SeplogicType getType() {
-	return t;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (getSymbolic().equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
     }
 }

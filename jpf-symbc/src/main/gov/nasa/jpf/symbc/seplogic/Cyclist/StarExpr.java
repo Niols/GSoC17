@@ -3,21 +3,21 @@
  * Administrator of the National Aeronautics and Space Administration.
  * All rights reserved.
  *
- * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License,
+ * Symbolic Pathfinder (jpf-symbc) is licensed under the Apache License, 
  * Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0.
+ * 
+ *        http://www.apache.org/licenses/LICENSE-2.0. 
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
+ * See the License for the specific language governing permissions and 
  * limitations under the License.
  */
 
 //
-//Copyright (C) 2006 United States Government as represented by the
+//Copyright (C) 2005 United States Government as represented by the
 //Administrator of the National Aeronautics and Space Administration
 //(NASA).  All Rights Reserved.
 //
@@ -35,21 +35,27 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
-public enum ProverBackend {
-    None("None"),
-    CVC4("CVC4"),
-    Cyclist("Cyclist");
-    
-    private final String repr;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 
-    ProverBackend(String repr) {
-	this.repr = repr;
+public class StarExpr extends gov.nasa.jpf.symbc.seplogic.StarExpr implements SeplogicExpression, CyclistConvertible {
+
+    public StarExpr(SeplogicExpression[] exprs) {
+	super(exprs);
     }
 
-    @Override
-    public String toString() {
-	return repr;
+    public StarExpr(SeplogicExpression P, SeplogicExpression Q) {
+	super(P, Q);
+    }
+
+    public String toCyclistString() {
+	SeplogicExpression[] exprs = getExpressions();
+	String repr = "";
+	
+	for (int i = 0; i < exprs.length - 1; i++)
+	    repr += "(" + ((CyclistConvertible) exprs[i]).toCyclistString() + ") * ";
+
+	return repr + "(" + ((CyclistConvertible) exprs[exprs.length-1]).toCyclistString() + ")";
     }
 }

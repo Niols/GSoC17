@@ -74,6 +74,10 @@ public class SL {
 		System.loadLibrary("cvc4jni");
 		break;
 
+	    case "cyclist":
+		backend = ProverBackend.Cyclist;
+		break;
+		
 	    default:
 		System.out.println("Unknown prover backend: " + confBackend[0]);
 	    }
@@ -107,6 +111,7 @@ public class SL {
     public static SeplogicProver getProver() {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.CVC4Prover();
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.CyclistProver();
 	case None: default: return new DummyProver();
 	}
     }
@@ -116,6 +121,7 @@ public class SL {
     public static PointstoExpr Pointsto(SeplogicVariable l, SeplogicValue v) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.PointstoExpr(l, v);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.PointstoExpr(l, v);
 	case None: default: return new PointstoExpr(l, v);
 	}
     }
@@ -123,6 +129,7 @@ public class SL {
     public static StarExpr Star(SeplogicExpression[] exprs) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(exprs);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.StarExpr(exprs);
 	case None: default: return new StarExpr(exprs);
 	}
     }
@@ -130,6 +137,7 @@ public class SL {
     public static StarExpr Star(SeplogicExpression P, SeplogicExpression Q) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.StarExpr(P, Q);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.StarExpr(P, Q);
 	case None: default: return new StarExpr(P, Q);
 	}
     }
@@ -137,6 +145,7 @@ public class SL {
     public static BinopExpr Binop(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.BinopExpr(b, l, v);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.BinopExpr(b, l, v);
 	case None: default: return new BinopExpr(b, l, v);
 	}
     }
@@ -146,6 +155,7 @@ public class SL {
 
 	switch(getBackend()) {
 	case CVC4: v = new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicVariable(n, t); break;
+	case Cyclist: v = new gov.nasa.jpf.symbc.seplogic.Cyclist.SeplogicVariable(n, t); break;
 	case None: default: v = new SeplogicVariable(n, t); break;
 	}
 
@@ -156,6 +166,7 @@ public class SL {
     public static SeplogicRecord Record(String[] keys, SeplogicVariable[] values) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.SeplogicRecord(keys, values);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.SeplogicRecord(keys, values);
 	case None: default: return new SeplogicRecord(keys, values);
 	}
     }
@@ -165,6 +176,7 @@ public class SL {
 	if (nullValue == null) {
 	    switch(getBackend()) {
 	    case CVC4: nullValue = new gov.nasa.jpf.symbc.seplogic.CVC4.NullValue(); break;
+	    case Cyclist: nullValue = new gov.nasa.jpf.symbc.seplogic.Cyclist.NullValue(); break;
 	    case None: default: nullValue = new NullValue(); break;
 	    }
 	}
@@ -176,6 +188,7 @@ public class SL {
 	if (trueExpr == null) {
 	    switch(getBackend()) {
 	    case CVC4: trueExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.TrueExpr(); break;
+	    case Cyclist: trueExpr = new gov.nasa.jpf.symbc.seplogic.Cyclist.TrueExpr(); break;
 	    case None: default: trueExpr = new TrueExpr(); break;
 	    }
 	}
@@ -187,6 +200,7 @@ public class SL {
 	if (falseExpr == null) {
 	    switch(getBackend()) {
 	    case CVC4: falseExpr = new gov.nasa.jpf.symbc.seplogic.CVC4.FalseExpr(); break;
+	    case Cyclist: falseExpr = new gov.nasa.jpf.symbc.seplogic.Cyclist.FalseExpr(); break;
 	    case None: default: falseExpr = new FalseExpr(); break;
 	    }
 	}
@@ -198,14 +212,14 @@ public class SL {
     public static IntType IntType() {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.IntType();
-	case None: default: return new IntType();
+	case Cyclist: case None: default: return new IntType();
 	}
     }
 
     public static RecordType RecordType(String[] keys) {
 	switch(getBackend()) {
 	case CVC4: return new gov.nasa.jpf.symbc.seplogic.CVC4.RecordType(keys);
-	case None: default: return new RecordType(keys);
+	case Cyclist: case None: default: return new RecordType(keys);
 	}
     }
 

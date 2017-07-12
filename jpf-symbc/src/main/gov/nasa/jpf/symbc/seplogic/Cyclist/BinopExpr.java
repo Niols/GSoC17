@@ -35,61 +35,32 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SeplogicBinop;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
 
-public class SeplogicVariable implements SeplogicValue {
-    private final SymbolicInteger n; //FIXME: emancipate!
-    private final SeplogicType t;
-    
-    public SeplogicVariable(SymbolicInteger n, SeplogicType t) {
-	this.n = n;
-	this.t = t;
+public class BinopExpr extends gov.nasa.jpf.symbc.seplogic.BinopExpr implements SeplogicExpression, CyclistConvertible {
+
+    public BinopExpr(SeplogicBinop b, SeplogicVariable l, SeplogicValue v) {
+	super(b, l, v);
     }
 
-    public String toString(boolean withTypes) {
-	int code = hashCode();
-	String repr;
-	
-	if (code < 26)
-	    /* Try to print a letter of the alphabet. */
-	    repr = String.valueOf("pqrstuvwxyzabcdefghijklmno".charAt(code));
-	else
-	    /* If you can't, fall back on the integer value. */
-	    repr = "?" + String.valueOf(code);
+    public String toCyclistString() {
 
-	if (withTypes)
-	    repr += " : " + getType().toString();
+	String repr = ((CyclistConvertible) getLhs()).toCyclistString();
+	
+	switch (getOp()) {
+	case EQ: repr += "="; break;
+	case NE: repr += "!="; break;
+	default: repr += ""; //FIXME: throw exception
+	}
+
+	repr += ((CyclistConvertible) getRhs()).toCyclistString();
 
 	return repr;
-    }
-
-    public int hashCode() {
-	return getSymbolic().hashCode();
-    }
-    
-    public String toString() {
-	return toString(false);
-    }
-    
-    public SeplogicValue copy() {
-	return this; //FIXME: sure?
-    }
-
-    public SymbolicInteger getSymbolic() {
-	return n;
-    }
-
-    public SeplogicType getType() {
-	return t;
-    }
-    
-    public boolean equals(SeplogicVariable v) {
-	return (getSymbolic().equals(v.getSymbolic()));
-    }
-
-    public boolean equals(Object o) {
-	return (o instanceof SeplogicVariable) && equals((SeplogicVariable) o);
     }
 }
