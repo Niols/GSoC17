@@ -1,0 +1,69 @@
+#!/bin/sh
+set -e
+
+readonly PROGDIR=$(dirname "$0")
+readonly PROGNAME=$(basename "$0")
+readonly ORIGDIR=$PWD
+
+cd "$PROGDIR"
+
+indent () { sed 's|^|  |'; }
+
+
+
+if cat /proc/1/cgroup | grep -q '/docker/'
+then
+    ## Inside the docker container.
+
+    printf 'Inside the docker container. Copying interesting file...\n'
+    
+    cp /root/cyclist-*/*.native /root/target
+
+    printf 'Done. Here is the content of the target directory:\n'
+    cd /root/target && find | indent
+
+    printf 'Leaving the docker container now.\n'
+    
+else
+    printf 'We are on the host system.\n'
+    
+    ## In the host system.
+
+    readonly SEED=$RANDOM
+
+
+    ## Build the docker image
+
+    printf 'Creating docker image `%s` now...\n' cyclist_"$SEED"
+    
+    docker build -t cyclist_"$SEED" . 2>&1 | indent
+
+
+    ## Get the target directory
+
+    TARGET=$1
+    if [ -z "$TARGET" ]
+    then
+	printf 'No target directory provided. Using `target`.\n'
+	TARGET=$PWD/target
+    fi
+    if [ "${TARGET#/}" == "$TARGET" ] ## If TARGET does not start with a /
+    then
+	TARGET=$ORIGDIR/$TARGET
+    fi
+    mkdir -p "$TARGET"
+
+    printf 'The target directory is: %s\n' "$TARGET"
+
+    
+    ## Get the interesting files
+
+    printf 'Running the extract command inside the docker container...\n'
+    
+    docker run -v "$TARGET":/root/target cyclist_"$SEED" /bin/sh -c /root/extract 2>&1 | indent
+
+    printf 'Done. Here is the content of the target directory:\n'
+    find "$TARGET" | indent
+
+    printf 'Cya!\n'
+fi
