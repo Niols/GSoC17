@@ -44,6 +44,8 @@ import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import java.io.FileReader;
+
 /* SPL+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
@@ -56,16 +58,27 @@ public class CyclistProver implements SeplogicProver {
     @Override
     public boolean isSatisfiable(SeplogicExpression e) {
 
-	String formula = ((CyclistConvertible) e).toCyclistString();
+	CyclistConvertible c = (CyclistConvertible) e;
+
+	String formula = c.toCyclistString();
 
 	if (SL.debugMode)
 	    System.out.println("CyclistProver: formula is: " + formula);
 
 	String contents = "goal {\n  " + formula + " => goal(";
 	Object[] vars = e.getFreeVariables().toArray();
-	for (int i = 0; i < vars.length - 1; i++)
-	    contents += ((CyclistConvertible) vars[i]).toCyclistString() + ",";
-	contents += vars[vars.length-1] + ")\n}";
+	if (vars.length > 0) {
+	    for (int i = 0; i < vars.length - 1; i++)
+		contents += ((CyclistConvertible) vars[i]).toCyclistString() + ",";
+	    contents += ((CyclistConvertible) vars[vars.length-1]).toCyclistString();
+	}
+	contents += ")\n}";
+	for (String predicateDefinition : c.cyclistPredicateDefinitions()) {
+	    contents += ";\n" + predicateDefinition;
+	}
+
+	if (SL.debugMode)
+	    System.out.println("CyclistProver: content is:\n" + contents);
 
 	String filename = "/tmp/satcheck";
 
@@ -89,27 +102,33 @@ public class CyclistProver implements SeplogicProver {
 	    }
 	}
 
-	boolean isSat = false;
-	
+	boolean isSat = true; // sat by default (otherwise, we would kill branches that
+
 	/* Run sl_satcheck on that file */
 	try {
-	    String[] cmd = {"sl_satcheck.native", "-D", filename};
+	    /* -f tells cyclist to check only the first definition;
+             * -D tells cyclist that we will provide a filename */
+	    String[] cmd = {"sl_satcheck.native", "-f", "-D", filename};
 	    ProcessBuilder procBuilder = new ProcessBuilder(cmd);
 	    procBuilder.redirectErrorStream(true);
 	    Process proc = procBuilder.start();
 
 	    BufferedReader stdout = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-	    String line;
-	    while ((line = stdout.readLine()) != null) {
-		if (line.substring(0,3).equals("SAT")) {
+	    String line = stdout.readLine();
+	    if (SL.debugMode) System.out.println("CyclistProver: Cyclist's output was:");
+	    while (line != null) {
+		if (line.startsWith("SAT")) {
 		    isSat = true;
 		    break;
 		}
-		else if (line.substring(0,5).equals("UNSAT")) {
+		else if (line.startsWith("UNSAT")) {
 		    isSat = false;
 		    break;
 		}
+		if (SL.debugMode) System.out.println("CyclistProver:   " + line);
+		line = stdout.readLine();
 	    }
+	    System.out.println("CyclistProver: Could not find if the formula was satisfiable or not.");
 	    stdout.close();
 	}
 	catch (IOException ex) {
