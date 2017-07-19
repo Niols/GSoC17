@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+import java.util.HashSet;
+ 
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 
 public class StarExpr extends gov.nasa.jpf.symbc.seplogic.StarExpr implements SeplogicExpression, CyclistConvertible {
@@ -57,5 +60,17 @@ public class StarExpr extends gov.nasa.jpf.symbc.seplogic.StarExpr implements Se
 	    repr += ((CyclistConvertible) exprs[i]).toCyclistString() + " * ";
 
 	return repr + ((CyclistConvertible) exprs[exprs.length-1]).toCyclistString();
+    }
+
+    public Set<String> cyclistPredicateDefinitions() {
+	Set<String> s = new HashSet<String>();
+	
+	for (SeplogicExpression P : getExpressions()) {
+	    Set<String> t = ((CyclistConvertible) P).cyclistPredicateDefinitions();
+	    if (t != null)
+		s.addAll(t);
+	}
+
+	return s;
     }
 }

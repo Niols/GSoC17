@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
 /* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
@@ -61,4 +63,6 @@ public class SeplogicVariable extends gov.nasa.jpf.symbc.seplogic.SeplogicVariab
 	    repr = "p";
 	return repr;
     }
+
+    public Set<String> cyclistPredicateDefinitions() { return null; }
 }

@@ -37,11 +37,16 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
+/* SPF+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 
 public class TrueExpr extends gov.nasa.jpf.symbc.seplogic.TrueExpr implements SeplogicExpression, CyclistConvertible {
 
     public String toCyclistString() {
-	return "true";
+	return "fresh=fresh"; //FIXME: no true?
     }
+
+    public Set<String> cyclistPredicateDefinitions() { return null; }
 }

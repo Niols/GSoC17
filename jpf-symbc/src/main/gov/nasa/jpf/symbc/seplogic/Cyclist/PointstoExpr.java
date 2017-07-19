@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
+/* SPF+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
@@ -50,4 +53,6 @@ public class PointstoExpr extends gov.nasa.jpf.symbc.seplogic.PointstoExpr imple
     public String toCyclistString() {
 	return ((CyclistConvertible) getPointer()).toCyclistString() + "->" + ((CyclistConvertible) getTarget()).toCyclistString();
     }
+
+    public Set<String> cyclistPredicateDefinitions() { return null; }
 }

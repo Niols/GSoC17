@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
+/* SPF+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
 
 public class NullValue extends gov.nasa.jpf.symbc.seplogic.NullValue implements SeplogicValue, CyclistConvertible {
@@ -44,4 +47,6 @@ public class NullValue extends gov.nasa.jpf.symbc.seplogic.NullValue implements 
     public String toCyclistString() {
 	return "nil";
     }
+
+    public Set<String> cyclistPredicateDefinitions() { return null; }
 }

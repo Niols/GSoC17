@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
 /* SPF+SL imports */
 import gov.nasa.jpf.symbc.seplogic.SeplogicBinop;
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
@@ -63,4 +65,6 @@ public class BinopExpr extends gov.nasa.jpf.symbc.seplogic.BinopExpr implements 
 
 	return repr;
     }
+
+    public Set<String> cyclistPredicateDefinitions() { return null; }
 }

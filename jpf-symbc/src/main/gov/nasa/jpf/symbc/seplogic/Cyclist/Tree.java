@@ -38,26 +38,34 @@
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
 import java.util.Set;
+import java.util.HashSet;
 
 /* SPF+SL imports */
-import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
 
-public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CyclistConvertible {
+public class Tree extends gov.nasa.jpf.symbc.seplogic.Tree implements SeplogicExpression, CyclistConvertible {
 
-    public SeplogicRecord(String[] keys, gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values) {
-	super(keys, values);
+    public Tree(SeplogicVariable variable, Set<String> labels) {
+	super(variable, labels);
     }
-
+    
     public String toCyclistString() {
-	String repr = "";
-
-	gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values = getValues();
-	
-	for (int i = 0; i < values.length - 1; i++)
-	    repr += ((CyclistConvertible) values[i]).toCyclistString() + ",";
-
-	return repr + ((CyclistConvertible) values[values.length-1]).toCyclistString();
+	return getPredicate().uniqueName() + "(" + ((CyclistConvertible) getVariable()).toCyclistString() + ")";
     }
 
-    public Set<String> cyclistPredicateDefinitions() { return null; }
+    public Set<String> cyclistPredicateDefinitions() {
+	String name = getPredicate().uniqueName();
+
+	//FIXME: wont work if there are other fields. we have to be
+	//clever to discover them. but we also have to know how to
+	//write that in Cyclist.
+	
+	String repr = name + " {\n  p=nil => " + name + "(p)\n}"; //FIXME: incomplete, lacks the most important rule
+
+	Set<String> s = new HashSet<String>();
+	s.add(repr);
+
+	return s;
+    }
 }

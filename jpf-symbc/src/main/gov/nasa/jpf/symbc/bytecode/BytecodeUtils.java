@@ -55,8 +55,14 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.Vector;
+
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.SeplogicPredicate;
 
 public class BytecodeUtils {
 
@@ -186,7 +192,6 @@ public class BytecodeUtils {
 	String mname = invInst.getInvokedMethodName();
 	String cname = invInst.getInvokedMethodClassName();
 
-
 	MethodInfo mi = invInst.getInvokedMethod(th);
 		
 	if (mi == null) {
@@ -294,8 +299,28 @@ public class BytecodeUtils {
 	    //			}
 
 	    boolean seplogic = conf.getBoolean("symbolic.seplogic", false);
+
+	    /* Here, we read the preconditions in the configuration
+	     * and put them all in a map from String to
+	     * Set<SeplogicPredicate>. */
 	    
-			
+	    Map<String,Set<SeplogicPredicate>> seplogicPreconditions = new HashMap<String,Set<SeplogicPredicate>>();
+	    
+	    for (String precondition : conf.getStringArray("symbolic.seplogic.precondition")) {
+		precondition = precondition.trim();
+
+		String key = precondition.split("->", 2)[0];
+
+		Set<SeplogicPredicate> s = seplogicPreconditions.get(key);
+		if (s == null) {
+		    s = new HashSet<SeplogicPredicate>();
+		    seplogicPreconditions.put(key, s);
+		}
+
+		SeplogicPredicate value = SL.predicateOfString(precondition.split("->", 2)[1]);
+		s.add(value);
+	    }
+	    
 	    for (int j = 0; j < argSize; j++) { // j ranges over actual arguments
 		if (symClass || args.get(j).equalsIgnoreCase("SYM")) {
 		    String name =  argsInfo[localVarsIdx].getName();
@@ -460,10 +485,22 @@ public class BytecodeUtils {
                         // the argument is of reference type and it is symbolic
 			if((lazy != null && lazy[0].equalsIgnoreCase("true")) || seplogic) {
 
-				IntegerExpression sym_v = new SymbolicInteger(varName(name, VarType.REF));
-				expressionMap.put(name, sym_v);
-				sf.setOperandAttr(stackIdx, sym_v);
-				outputString = outputString.concat(" " + sym_v + ",");
+			    SymbolicInteger sym_v = new SymbolicInteger(varName(name, VarType.REF));
+			    
+			    /* This is the full name of the function
+			     * that has been called. localVarsIdx
+			     * would be the argument number. */
+			    String fname = cname + '.' + mname.substring(0, mname.indexOf('('));
+			    String vname = fname + "#" + localVarsIdx;
+
+			    Set<SeplogicPredicate> preconditions = seplogicPreconditions.get(vname);
+			    if (preconditions != null)
+				for (SeplogicPredicate pred : preconditions)
+				    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addStaticConstraint(pred.apply(SL.Variable(sym_v, null)));
+			    
+			    expressionMap.put(name, sym_v);
+			    sf.setOperandAttr(stackIdx, sym_v);
+			    outputString = outputString.concat(" " + sym_v + ",");
 			}
 			//throw new RuntimeException("## Error: parameter type not yet handled: " + argTypes[j]);
 		    }

@@ -37,7 +37,10 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
 
 /* JPF imports */
 import gov.nasa.jpf.Config;
@@ -96,9 +99,13 @@ public class SL {
 	    SeplogicVariable q = SL.Variable(new SymbolicInteger(), IntType());
 	    SeplogicVariable a = SL.Variable(new SymbolicInteger(), IntType());
 	    SeplogicVariable b = SL.Variable(new SymbolicInteger(), IntType());
+
+	    SeplogicExpression sat = SL.Star(Pointsto(p, a), Pointsto(p, b));
+	    System.out.println("[got:" + (getProver().isSatisfiable(sat) ? " sat " : "unsat")
+			       + ",expected:" + " sat " + "]"
+			       + " " + sat);
 	    
 	    SeplogicExpression unsat = SL.Star(SL.Star(Pointsto(p, a),Pointsto(p, b)),Ne(a, b));
-	    boolean isSat = getProver().isSatisfiable(unsat);
 	    System.out.println("[got:" + (getProver().isSatisfiable(unsat) ? " sat " : "unsat")
 			       + ",expected:" + "unsat" + "]"
 			       + " " + unsat);
@@ -208,6 +215,21 @@ public class SL {
 	return falseExpr.copy();
     }
 
+    /* **********************[ Predicates ]********************** */
+
+    public static TreePredicate TreePredicate(Set<String> labels) {
+	switch(getBackend()) {
+	case None: default: return new TreePredicate(labels);
+	}
+    }
+    
+    public static Tree Tree(SeplogicVariable variable, Set<String> labels) {
+	switch(getBackend()) {
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.Tree(variable, labels);
+	case None: default: return new Tree(variable, labels);
+	}
+    }
+    
     /* Types */
 
     public static IntType IntType() {
@@ -290,4 +312,21 @@ public class SL {
 	return Record(keys, values);
     }
 
+    /* Parser for predicates */
+
+    public static SeplogicPredicate predicateOfString(String repr) {
+
+	String name = repr.substring(0, repr.indexOf('('));
+	String[] arguments = repr.substring(repr.indexOf('(') + 1, repr.indexOf(')')).split(",");
+
+	if (name.equalsIgnoreCase("tree")) {
+	    return TreePredicate(new HashSet<String>(Arrays.asList(arguments)));
+	}
+	else {
+	    System.out.println("ERROR: Unknown predicate: " + name);
+	    return null;
+	}
+
+	// this point should never be reached
+    }
 }

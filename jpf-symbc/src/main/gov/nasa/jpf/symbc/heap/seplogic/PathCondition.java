@@ -19,27 +19,38 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
 
 import gov.nasa.jpf.symbc.seplogic.*;
 
 public class PathCondition {
+    private static Set<SeplogicExpression> staticConstraints = null;
     private LinkedList<SeplogicExpression> constraints;
 
     public PathCondition(LinkedList<SeplogicExpression> constraints) {
 	this.constraints = constraints;
     }
-    
+
     public PathCondition() {
 	this(new LinkedList<SeplogicExpression>());
     }
 
+    public static void addStaticConstraint(SeplogicExpression constraint) {
+	if (staticConstraints == null)
+	    staticConstraints = new HashSet<SeplogicExpression>();
+	
+	staticConstraints.add(constraint);
+    }
+    
     private void reset() {
 	constraints = new LinkedList<SeplogicExpression>();
     }
     
     public SeplogicExpression toSeplogicExpression() {
 	SeplogicExpression[] dummy = {};
-	return SL.Star(constraints.toArray(dummy));
+	
+	return SL.Star(SL.Star(constraints.toArray(dummy)), SL.Star(staticConstraints.toArray(dummy)));
     }
 
     public PathCondition copy() {
@@ -48,7 +59,7 @@ public class PathCondition {
 
     public String toString() {
 	boolean sat = SL.getProver().isSatisfiable(toSeplogicExpression());
-	if (! sat) { reset(); _star(SL.False()); }
+	//if (! sat) { reset(); _star(SL.False()); }
 	
 	return "PC[" + (sat ? " sat " : "unsat") + "]: " + toSeplogicExpression().simplify().toString();
     }

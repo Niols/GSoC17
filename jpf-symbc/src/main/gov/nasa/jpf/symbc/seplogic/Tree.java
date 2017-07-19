@@ -35,29 +35,54 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic.Cyclist;
+package gov.nasa.jpf.symbc.seplogic;
 
 import java.util.Set;
+import java.util.HashSet;
 
-/* SPF+SL imports */
-import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+public class Tree implements SeplogicExpression {
+    private final Set<String> labels;
+    private final SeplogicVariable variable;
 
-public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CyclistConvertible {
-
-    public SeplogicRecord(String[] keys, gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values) {
-	super(keys, values);
+    public Tree(SeplogicVariable variable, Set<String> labels) {
+	this.variable = variable;
+	this.labels = labels;
     }
 
-    public String toCyclistString() {
-	String repr = "";
-
-	gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values = getValues();
-	
-	for (int i = 0; i < values.length - 1; i++)
-	    repr += ((CyclistConvertible) values[i]).toCyclistString() + ",";
-
-	return repr + ((CyclistConvertible) values[values.length-1]).toCyclistString();
+    public String toString(boolean withTypes) {
+	String repr = "Tree(" + variable.toString(withTypes);
+	for (String label : labels)
+	    repr += "," + label;
+	return repr + ")";
+    }
+    
+    public String toString() {
+	return toString(false);
+    }
+    
+    public Tree copy() {
+	return this;
+    }
+    
+    public Tree simplify() {
+	return this;
+    }
+    
+    public Set<SeplogicVariable> getFreeVariables() {
+	Set<SeplogicVariable> s = new HashSet<SeplogicVariable>();
+	s.add(variable);
+	return s;
     }
 
-    public Set<String> cyclistPredicateDefinitions() { return null; }
+    public SeplogicVariable getVariable() {
+	return variable;
+    }
+
+    public Set<String> getLabels() {
+	return labels;
+    }
+    
+    public TreePredicate getPredicate() {
+	return SL.TreePredicate(getLabels());
+    }
 }

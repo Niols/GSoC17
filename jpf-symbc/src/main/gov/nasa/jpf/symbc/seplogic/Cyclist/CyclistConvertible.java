@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
+import java.util.Set;
+
 public interface CyclistConvertible {
     public String toCyclistString();
+    public Set<String> cyclistPredicateDefinitions();
 }

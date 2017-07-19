@@ -35,29 +35,25 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic.Cyclist;
+package gov.nasa.jpf.symbc.seplogic;
 
 import java.util.Set;
 
-/* SPF+SL imports */
-import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+public class TreePredicate implements SeplogicPredicate {
+    private final Set<String> labels;
 
-public class SeplogicRecord extends gov.nasa.jpf.symbc.seplogic.SeplogicRecord implements SeplogicValue, CyclistConvertible {
-
-    public SeplogicRecord(String[] keys, gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values) {
-	super(keys, values);
+    public TreePredicate(Set<String> labels) {
+	this.labels = labels;
     }
 
-    public String toCyclistString() {
-	String repr = "";
-
-	gov.nasa.jpf.symbc.seplogic.SeplogicVariable[] values = getValues();
-	
-	for (int i = 0; i < values.length - 1; i++)
-	    repr += ((CyclistConvertible) values[i]).toCyclistString() + ",";
-
-	return repr + ((CyclistConvertible) values[values.length-1]).toCyclistString();
+    public SeplogicExpression apply(SeplogicVariable v) {
+	return SL.Tree(v, labels);
     }
 
-    public Set<String> cyclistPredicateDefinitions() { return null; }
+    public String uniqueName() {
+	String name = "tree";
+	for (String label : labels)
+	    name += "_" + label;
+	return name;
+    }
 }
