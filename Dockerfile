@@ -28,6 +28,7 @@ RUN cd /root/jpf-symbc/lib && tar xJf libcvc4.so.tar.xz
 ENV LD_LIBRARY_PATH=/root/jpf-symbc/lib:$LD_LIBRARY_PATH
 
 ## Prepare for interactive mode.
+ENV TERM=dumb
 WORKDIR /root
 ENTRYPOINT ["java", "-jar", "/root/jpf-core/build/RunJPF.jar", "+jpf-home=/root", "+jpf-core=/root/jpf-core", "+jpf-symbc=/root/jpf-symbc", "+extensions=${jpf-core},${jpf-symbc}"]
 CMD []
