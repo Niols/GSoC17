@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-public interface SeplogicProver {
-    public SatResult isSatisfiable(SeplogicExpression e);
+public enum SatResult {
+    SAT,
+    UNSAT,
+    UNKNOWN,
+    ERROR;
 }

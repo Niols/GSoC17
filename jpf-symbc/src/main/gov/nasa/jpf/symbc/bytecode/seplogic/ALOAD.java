@@ -247,19 +247,28 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	    System.err.println("subtypes not handled");
 	}
 
-	/* Once all of this is done, we push what we need to on the
-	 * stack, update our path condition and symbolic input heap,
-	 * and return. */
+	/* Now that this is done, we update our Path Condition, check
+	 * if it is satisfiable, and kill that state if it is not. */
+
+	if (SL.debugMode)
+	    System.out.println("ALOAD: " + PC.toString());
+	
+	if (! PC.isSatisfiable()) {
+	    if (SL.debugMode)
+		System.out.println("ALOAD: PC is not satisfiable; ignoring state.");
+
+	    th.getVM().getSystemState().setIgnored(true);
+	    return getNext(th);
+	}
+	
+	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
+	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
+	    
+	/* We push what we need to on the stack and return. */
 
 	sf.setLocalVariable(index, daIndex, true);
 	sf.setLocalAttr(index, null);
 	sf.push(daIndex, true);
-
-	if (SL.debugMode)
-	    System.out.println("ALOAD:    " + PC.toString());
-
-	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
-	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 
 	return getNext(th);
     }

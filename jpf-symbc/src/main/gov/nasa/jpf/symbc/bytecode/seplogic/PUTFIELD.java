@@ -134,11 +134,19 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger(), SL.IntType()));
 	    }
 
-	    ((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
-	    ((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
-
 	    if (SL.debugMode)
 		System.out.println("PUTFIELD: " + PC);
+	    
+	    if (! PC.isSatisfiable()) {
+		if (SL.debugMode)
+		    System.out.println("PUTFIELD: PC is not satisfiable; ignoring state.");
+		
+		ti.getVM().getSystemState().setIgnored(true);
+		return getNext(ti);
+	    }
+	    
+	    ((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
+	    ((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 
 	}
 

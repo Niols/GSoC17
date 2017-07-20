@@ -39,11 +39,10 @@ package gov.nasa.jpf.symbc.seplogic;
 
 public class DummyProver implements SeplogicProver {
     public DummyProver() {
-	// throw exception
+	//FIXME: throw exception
     }
 
-    public boolean isSatisfiable(SeplogicExpression e) {
-	// FIXME: throw exception
-	return true;
+    public SatResult isSatisfiable(SeplogicExpression e) {
+	return SatResult.ERROR;
     }
 }

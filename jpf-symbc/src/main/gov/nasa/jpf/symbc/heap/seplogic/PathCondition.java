@@ -58,10 +58,7 @@ public class PathCondition {
     }
 
     public String toString() {
-	boolean sat = SL.getProver().isSatisfiable(toSeplogicExpression());
-	//if (! sat) { reset(); _star(SL.False()); }
-	
-	return "PC[" + (sat ? " sat " : "unsat") + "]: " + toSeplogicExpression().simplify().toString();
+	return "PC[" + (isSatisfiable() ? " sat " : "unsat") + "]: " + toSeplogicExpression().toString();
     }
 
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
@@ -88,6 +85,10 @@ public class PathCondition {
     }
 
     public boolean isSatisfiable() {
-	return true;
+	switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
+	case UNSAT: return false;
+	case SAT: case UNKNOWN: return true;
+	case ERROR: default: return true; //FIXME:throw exception
+	}
     }
 }

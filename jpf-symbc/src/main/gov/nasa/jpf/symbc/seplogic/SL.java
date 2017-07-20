@@ -100,15 +100,11 @@ public class SL {
 	    SeplogicVariable a = SL.Variable(new SymbolicInteger(), IntType());
 	    SeplogicVariable b = SL.Variable(new SymbolicInteger(), IntType());
 
-	    SeplogicExpression sat = SL.Star(Pointsto(p, a), Pointsto(p, b));
-	    System.out.println("[got:" + (getProver().isSatisfiable(sat) ? " sat " : "unsat")
-			       + ",expected:" + " sat " + "]"
-			       + " " + sat);
+	    SeplogicExpression sat = SL.Star(Pointsto(p, a), Pointsto(q, a));
+	    System.out.println("[" + getProver().isSatisfiable(sat) + "] " + sat);
 	    
 	    SeplogicExpression unsat = SL.Star(SL.Star(Pointsto(p, a),Pointsto(p, b)),Ne(a, b));
-	    System.out.println("[got:" + (getProver().isSatisfiable(unsat) ? " sat " : "unsat")
-			       + ",expected:" + "unsat" + "]"
-			       + " " + unsat);
+	    System.out.println("[" + getProver().isSatisfiable(unsat) + "] " + unsat);
 	}
     }
 

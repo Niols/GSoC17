@@ -50,7 +50,7 @@ import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
 import gov.nasa.jpf.symbc.seplogic.UnknownVariableException;
 
 public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
-    
+
     public GETFIELD (String fieldName, String clsName, String fieldDescriptor) {
 	super(fieldName, clsName, fieldDescriptor);
     }
@@ -65,7 +65,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	if (! conf.getBoolean("symbolic.seplogic", false)) {
 	    return super.execute(ti);
 	}
-	
+
 	HeapNode[] prevSymRefs = null; // previously initialized objects of same type: candidates for lazy init
 	int numSymRefs = 0; // # of prev. initialized objects
 	ChoiceGenerator<?> prevHeapCG = null;
@@ -166,7 +166,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	int daIndex = 0; //index into JPF's dynamic area
 	if (currentChoice < numSymRefs) {
 	    // lazy initialization using a previously lazily initialized object
-	    
+
 	    HeapNode candidateNode = prevSymRefs[currentChoice];
 
 	    daIndex = candidateNode.getIndex();
@@ -179,7 +179,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 		System.err.println("ERROR: SHOULD NOT HAPPEN."); // FIXME: kill SPF?
 		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType());
 	    }
-	    
+
 	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNodeVar.getType(), candidateNodeVar));
 	}
 	else if (currentChoice == numSymRefs){ //null object
@@ -204,23 +204,31 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 		freshNodeVar = SL.Variable(freshNode, SL.IntType());
 	    }
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));		
+	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));
 	}
 	else {
 	    System.err.println("subtyping not handled");
 	}
+
+	if (SL.debugMode)
+	    System.out.println("GETFIELD: " + PC);
+
+	if (! PC.isSatisfiable()) {
+	    if (SL.debugMode)
+		System.out.println("GETFIELD: PC is not satisfiable; ignoring state.");
+	    
+	    ti.getVM().getSystemState().setIgnored(true);
+	    return getNext(ti);
+	}
+
+	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
+	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
 
 	ei.setReferenceField(fi, daIndex);
 	ei.setFieldAttr(fi, null);
 
 	frame.pushRef(daIndex);
 
-	if (SL.debugMode)
-	    System.out.println("GETFIELD: " + PC);
-	
-	((HeapChoiceGenerator) thisHeapCG).setCurrentPC(PC);
-	((HeapChoiceGenerator) thisHeapCG).setCurrentSymInputHeap(symInputHeap);
-	
 	return getNext(ti);
     }
 }

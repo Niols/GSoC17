@@ -50,20 +50,18 @@ import java.io.FileReader;
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
 import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.SatResult;
 
 public class CyclistProver implements SeplogicProver {
     public CyclistProver() {
     }
 
     @Override
-    public boolean isSatisfiable(SeplogicExpression e) {
+    public SatResult isSatisfiable(SeplogicExpression e) {
 
 	CyclistConvertible c = (CyclistConvertible) e;
 
 	String formula = c.toCyclistString();
-
-	if (SL.debugMode)
-	    System.out.println("CyclistProver: formula is: " + formula);
 
 	String contents = "goal {\n  " + formula + " => goal(";
 	Object[] vars = e.getFreeVariables().toArray();
@@ -77,8 +75,7 @@ public class CyclistProver implements SeplogicProver {
 	    contents += ";\n" + predicateDefinition;
 	}
 
-	if (SL.debugMode)
-	    System.out.println("CyclistProver: content is:\n" + contents);
+	//if (SL.debugMode) System.out.println("CyclistProver: content is:\n" + contents);
 
 	String filename = "/tmp/satcheck";
 
@@ -102,7 +99,7 @@ public class CyclistProver implements SeplogicProver {
 	    }
 	}
 
-	boolean isSat = true; // sat by default (otherwise, we would kill branches that
+	SatResult satResult = SatResult.ERROR;
 
 	/* Run sl_satcheck on that file */
 	try {
@@ -115,26 +112,21 @@ public class CyclistProver implements SeplogicProver {
 
 	    BufferedReader stdout = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 	    String line = stdout.readLine();
-	    if (SL.debugMode) System.out.println("CyclistProver: Cyclist's output was:");
+	    //if (SL.debugMode) System.out.println("CyclistProver: Cyclist's output was:");
 	    while (line != null) {
-		if (line.startsWith("SAT")) {
-		    isSat = true;
-		    break;
-		}
-		else if (line.startsWith("UNSAT")) {
-		    isSat = false;
-		    break;
-		}
-		if (SL.debugMode) System.out.println("CyclistProver:   " + line);
+		if (line.startsWith("SAT")) satResult = SatResult.SAT;
+		if (line.startsWith("UNSAT")) satResult = SatResult.UNSAT;
+		if (line.startsWith("UNKNOWN")) satResult = SatResult.UNKNOWN;
+
+		//if (SL.debugMode) System.out.println("CyclistProver:   " + line);
 		line = stdout.readLine();
 	    }
-	    System.out.println("CyclistProver: Could not find if the formula was satisfiable or not.");
 	    stdout.close();
 	}
 	catch (IOException ex) {
 	    ex.printStackTrace();
 	}
 
-	return isSat;
+	return satResult;
     }
 }

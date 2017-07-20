@@ -41,6 +41,7 @@ package gov.nasa.jpf.symbc.seplogic.CVC4;
 import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
 import gov.nasa.jpf.symbc.seplogic.SeplogicProver;
 import gov.nasa.jpf.symbc.seplogic.SL;
+import gov.nasa.jpf.symbc.seplogic.SatResult;
 
 /* CVC4 imports */
 import edu.nyu.acsys.CVC4.Expr;
@@ -83,7 +84,7 @@ public class CVC4Prover implements SeplogicProver {
     /* And what we waited for... the isSatisfiable method. */
     
     @Override
-    public boolean isSatisfiable(SeplogicExpression e) {
+    public SatResult isSatisfiable(SeplogicExpression e) {
 	Expr formula = ((CVC4Convertible) e).toCVC4Expr(getExprManager());
 	Result result = getSmtEngine().checkSat(formula);
 	boolean isSat = (result.isSat() == Result.Sat.SAT);
@@ -91,6 +92,6 @@ public class CVC4Prover implements SeplogicProver {
 	if (SL.debugMode)
 	    System.out.println("CVC4Prover: formula " + formula + " " + (isSat ? "IS" : "IS NOT") + " satisfiable.");
 	
-	return isSat;
+	return isSat ? SatResult.SAT : SatResult.UNSAT;
     }
 }
