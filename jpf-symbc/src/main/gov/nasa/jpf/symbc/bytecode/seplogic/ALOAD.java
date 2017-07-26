@@ -204,7 +204,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType()); // FIXME: can't be
 	    }
 	    
-	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNodeVar.getType(), candidateNodeVar));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, candidateNodeVar.getType()),
+		     candidateNodeVar);
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
@@ -214,7 +215,8 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = MJIEnv.NULL;
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, SL.IntType(), SL.Null()));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, SL.IntType()),
+		     SL.Null());
 	}
 	else if ((currentChoice == (prevSymRefs.length + 1) && !abstractClass)
 		 || (currentChoice == prevSymRefs.length && (((IntegerExpression) attr).toString()).contains("this"))) {
@@ -238,7 +240,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 		freshNodeVar = SL.Variable(freshNode, SL.IntType()); // FIXME: can't be
 	    }
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, freshNodeVar.getType()), freshNodeVar);
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not

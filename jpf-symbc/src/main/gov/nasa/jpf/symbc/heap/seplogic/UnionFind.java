@@ -35,36 +35,53 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.heap.seplogic;
 
 import java.util.Set;
 
 /**
- * The interface for separation logic expressions.
+ * An interface for a Union-Find structure (a.k.a. a disjoint-set data
+ * structure, or a merge-find set). 
+ *
+ * This is a data structure that keeps track of a set of elements
+ * partitioned into a number of disjoint (non-overlapping) subsets. 
  */
-public interface SeplogicExpression {
+public interface UnionFind<T> {
     
-    public String toString();
-    public String toString(boolean withTypes);
+    class Entry<T> {
+	private final T nonRepresentant;
+	private final T representant;
+	
+	public Entry(T nonRepresentant, T representant) {
+	    this.nonRepresentant = nonRepresentant;
+	    this.representant = representant;
+	}
 
-    /**
-     * Returns the set of free variables. Free variables are all the
-     * variables that appear in an expression, without being
-     * quantified on. In our case, and since there is no
-     * quantification, that means all the variables.
-     */
-    public Set<SeplogicVariable> getFreeVariables();
+	public T getNonRepresentant() {
+	    return nonRepresentant;
+	}
 
-    /**
-     * Returns the set of constrained variables. Those variables are
-     * all the variables that are free but appear as the pointer of a
-     * ". -> .", as an alias of a known constrained variable, or in a
-     * predicate.
-     */
-    public Set<SeplogicVariable> getConstrainedVariables(); //FIXME: handle aliasing
+	public T getRepresentant() {
+	    return representant;
+	}
+    }
     
-    /**
-     * Simplifies the expression into an equivalent one.
-     */
-    public SeplogicExpression simplify();
+    // /** Creates a fresh Union-Find structure. */
+    // public UnionFind();
+
+    // /** Creates the Union-Find structure that represents the same sets
+    //  * as the given one. */
+    // public UnionFind(UnionFind other);
+    
+    /** Returns the representent of the given element. */
+    public T find(T e);
+
+    /** Takes two elements and merges their equivalence classes. */
+    public void union(T e, T f);
+    
+    /** Returns the set of all the representants. */
+    public Set<T> getAllRepresentants();
+    
+    /** Returns the set of all the mappings. */
+    public Set<Entry<T>> getAll();
 }

@@ -38,51 +38,11 @@
 package gov.nasa.jpf.symbc.seplogic;
 
 import java.util.Set;
-import java.util.HashSet;
 
-public class Tree implements SeplogicExpression {
-    private final Set<String> labels;
-    private final SeplogicVariable variable;
-
-    public Tree(SeplogicVariable variable, Set<String> labels) {
-	this.variable = variable;
-	this.labels = labels;
-    }
-
-    public String toString(boolean withTypes) {
-	String repr = "Tree(" + variable.toString(withTypes);
-	for (String label : labels)
-	    repr += "," + label;
-	return repr + ")";
-    }
+/**
+ * The interface for separation logic expressions.
+ */
+public interface AppliedPredicate extends SeplogicExpression {
     
-    public String toString() {
-	return toString(false);
-    }
-    
-    public Tree copy() {
-	return this;
-    }
-    
-    public Tree simplify() {
-	return this;
-    }
-    
-    public Set<SeplogicVariable> getFreeVariables() {
-	Set<SeplogicVariable> s = new HashSet<SeplogicVariable>();
-	s.add(variable);
-	return s;
-    }
-
-    public SeplogicVariable getVariable() {
-	return variable;
-    }
-
-    public Set<String> getLabels() {
-	return labels;
-    }
-    
-    public TreePredicate getPredicate() {
-	return SL.TreePredicate(getLabels());
-    }
+    public Set<SeplogicExpression> unfold();
 }

@@ -180,12 +180,13 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType());
 	    }
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, candidateNodeVar.getType(), candidateNodeVar));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, candidateNodeVar.getType()),
+		     candidateNodeVar);
 	}
 	else if (currentChoice == numSymRefs){ //null object
 	    daIndex = MJIEnv.NULL;
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, SL.IntType(), SL.Null()));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, SL.IntType()), SL.Null());
 	}
 	else if (currentChoice == (numSymRefs + 1) && !abstractClass) {
 	    // creates a new object with all fields symbolic and adds the object to SymbolicHeap
@@ -204,7 +205,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 		freshNodeVar = SL.Variable(freshNode, SL.IntType());
 	    }
 
-	    PC._star(SL.Eq((SymbolicInteger) attr, freshNodeVar.getType(), freshNodeVar));
+	    PC.addEq(SL.Variable((SymbolicInteger) attr, freshNodeVar.getType()), freshNodeVar);
 	}
 	else {
 	    System.err.println("subtyping not handled");

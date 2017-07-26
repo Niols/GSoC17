@@ -46,7 +46,7 @@ public class TreePredicate implements SeplogicPredicate {
 	this.labels = labels;
     }
 
-    public SeplogicExpression apply(SeplogicVariable v) {
+    public AppliedPredicate apply(SeplogicVariable v) {
 	return SL.Tree(v, labels);
     }
 

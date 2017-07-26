@@ -37,8 +37,8 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 public class TrueExpr implements SeplogicExpression {
     public TrueExpr() {}
@@ -60,6 +60,10 @@ public class TrueExpr implements SeplogicExpression {
     }
 
     public Set<SeplogicVariable> getFreeVariables() {
+	return new HashSet<SeplogicVariable>();
+    }
+
+    public Set<SeplogicVariable> getConstrainedVariables() {
 	return new HashSet<SeplogicVariable>();
     }
 }

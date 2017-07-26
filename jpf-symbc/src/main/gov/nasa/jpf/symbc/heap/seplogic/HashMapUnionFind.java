@@ -35,37 +35,74 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic.Cyclist;
+package gov.nasa.jpf.symbc.heap.seplogic;
 
-import java.util.Set;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-/* SPF+SL imports */
-import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
-import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+/** This is a very easy implementation of the Union-Find
+ * structure. However, its performances are not that good. */
 
-public class Tree extends gov.nasa.jpf.symbc.seplogic.Tree implements SeplogicExpression, CyclistConvertible {
+public class HashMapUnionFind<T> implements UnionFind<T> {
+    
+    private final Map<T,T> fatherMap;
 
-    public Tree(SeplogicVariable variable, Set<String> labels) {
-	super(variable, labels);
+    public HashMapUnionFind() {
+	fatherMap = new HashMap<T,T>();
+    }
+
+    public HashMapUnionFind(Set<Entry<T>> entries) {
+	fatherMap = new HashMap<T,T>();
+	
+	for (Entry<T> entry : entries) {
+	    fatherMap.put(entry.getNonRepresentant(),
+			  entry.getRepresentant());
+	}
     }
     
-    public String toCyclistString() {
-	return getPredicate().uniqueName() + "(" + ((CyclistConvertible) getVariable()).toCyclistString() + ")";
+    public HashMapUnionFind(UnionFind other) {
+	this(other.getAll());
     }
 
-    public Set<String> cyclistPredicateDefinitions() {
-	String name = getPredicate().uniqueName();
-
-	//FIXME: wont work if there are other fields. we have to be
-	//clever to discover them. but we also have to know how to
-	//write that in Cyclist.
+    public T find(T e) {
+	T father = fatherMap.get(e);
 	
-	String repr = name + " {\n  p=nil => " + name + "(p)\n}"; //FIXME: incomplete, lacks the most important rule
+	if (father == null) {
+	    return e;
+	} else {
+	    T ancestor = find(father);
+	    fatherMap.replace(e, ancestor);
+	    return ancestor;
+	}
+    }
 
-	Set<String> s = new HashSet<String>();
-	s.add(repr);
+    public void union(T e, T f) {
+	T ancestorE = find(e);
+	T ancestorF = find(f);
+	
+	if (! ancestorE.equals(ancestorF)) {
+	    fatherMap.put(ancestorE, ancestorF);
+	}
+    }
 
-	return s;
+    public Set<T> getAllRepresentants() {
+	Set<T> all = new HashSet<T>();
+	
+	for (T e : fatherMap.keySet()) {
+	    all.add(find(e));
+	}
+
+	return all;
+    }
+    
+    public Set<Entry<T>> getAll() {
+	Set<Entry<T>> all = new HashSet<Entry<T>>();
+
+	for (T e : fatherMap.keySet()) {
+	    all.add(new Entry(e, find(e)));
+	}
+	return all;
     }
 }

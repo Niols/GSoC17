@@ -38,5 +38,5 @@
 package gov.nasa.jpf.symbc.seplogic;
 
 public interface SeplogicPredicate {
-    public SeplogicExpression apply(SeplogicVariable v);
+    public AppliedPredicate apply(SeplogicVariable v);
 }

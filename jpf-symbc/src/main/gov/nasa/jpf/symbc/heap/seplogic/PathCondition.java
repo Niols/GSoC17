@@ -18,77 +18,133 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
-import java.util.LinkedList;
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
-import gov.nasa.jpf.symbc.seplogic.*;
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.PointstoExpr;
+import gov.nasa.jpf.symbc.seplogic.SatResult;
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
+import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class PathCondition {
+    
     private static Set<SeplogicExpression> staticConstraints = null;
-    private LinkedList<SeplogicExpression> constraints;
+    private Set<SeplogicExpression> constraints;
+    private UnionFind<SeplogicVariable> aliases;
 
-    public PathCondition(LinkedList<SeplogicExpression> constraints) {
+    public PathCondition(Set<SeplogicExpression> constraints,
+			 UnionFind<SeplogicVariable> aliases) {
 	this.constraints = constraints;
+	this.aliases = aliases;
     }
-
+    
     public PathCondition() {
-	this(new LinkedList<SeplogicExpression>());
-    }
 
+	if (staticConstraints == null)
+	    this.constraints = new HashSet<SeplogicExpression>();
+	else
+	    this.constraints = new HashSet<SeplogicExpression>(staticConstraints);
+
+	this.aliases = new HashMapUnionFind<SeplogicVariable>();
+    }
+    
     public static void addStaticConstraint(SeplogicExpression constraint) {
 	if (staticConstraints == null)
 	    staticConstraints = new HashSet<SeplogicExpression>();
-	
 	staticConstraints.add(constraint);
     }
-    
-    private void reset() {
-	constraints = new LinkedList<SeplogicExpression>();
-    }
-    
-    public SeplogicExpression toSeplogicExpression() {
-	SeplogicExpression[] dummy = {};
-	
-	return SL.Star(SL.Star(constraints.toArray(dummy)), SL.Star(staticConstraints.toArray(dummy)));
-    }
 
-    public PathCondition copy() {
-	return new PathCondition((LinkedList<SeplogicExpression>) constraints.clone());
+    /** Returns the separation logic expression corresponding to that
+     * path condition. */
+    public SeplogicExpression toSeplogicExpression() {
+
+	/* We first recover the constraints, and add all the equalities. */
+	Set<SeplogicExpression> allConstraints = new HashSet<SeplogicExpression>(constraints);
+	for (UnionFind.Entry<SeplogicVariable> equality : aliases.getAll()) {
+	    allConstraints.add(SL.Eq(equality.getNonRepresentant(),
+				     equality.getRepresentant()));
+	}
+	
+	SeplogicExpression[] dummy = {};
+	return SL.Star(allConstraints.toArray(dummy));
+    }
+    
+    /**
+     * Shallow cloning of the path condition. Deep cloning is not
+     * needed because the only modifications that are authorised on
+     * separation logic expressions are local.
+     */
+    public PathCondition clone() {
+	return new PathCondition(new HashSet<SeplogicExpression>(constraints),
+				 new HashMapUnionFind(aliases));
     }
 
     public String toString() {
 	return "PC[" + (isSatisfiable() ? " sat " : "unsat") + "]: " + toSeplogicExpression().toString();
     }
 
+    /**
+     * Finds anything that talks about l in the path condition. It
+     * then updates the constraint to represent the new constraint,
+     * where the field f of l is the reference v.
+     */
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
-	//FIXME: handle aliasing.
-	
-	for (int i = 0; i < constraints.size(); i++) {
-	    SeplogicExpression e = constraints.get(i);
 
-	    if (e instanceof PointstoExpr) {
-		PointstoExpr pe = (PointstoExpr) e;
+	//FIXME: handle aliasing
+	//FIXME: handle unfolding
+
+	for (SeplogicExpression constraint : constraints) {
+
+	    if (constraint instanceof PointstoExpr) {
+		PointstoExpr pe = (PointstoExpr) constraint;
 
 		if (pe.getPointer().equals(l)) {
 		    SeplogicRecord r = (SeplogicRecord) pe.getTarget();
-		    constraints.set(i, SL.Pointsto(l, r.update(f, v)));
+
+		    constraints.remove(constraint);
+		    constraints.add(SL.Pointsto(l, r.update(f, v)));
+		    
 		    return;
 		}
 	    }
 	}
+
 	assert (false);
     }
-    
-    public void _star(SeplogicExpression e) {
+
+    public void addEq(SeplogicVariable x, SeplogicValue v) {
+	if (v instanceof SeplogicVariable) {
+	    aliases.union(x, (SeplogicVariable) v);
+	} else {
+	    _star(SL.Eq(x,v));
+	}
+    }
+
+    public void addPointsto(SeplogicVariable x, SeplogicValue e) {
+	_star(SL.Pointsto(x, e));
+    }
+
+    private void _star(SeplogicExpression e) {
 	constraints.add(e);
     }
 
+    /**
+     * Tests the satisfiability of the constraint. When in doubt, this
+     * is considered satisfiable, because we only want to prune pathes
+     * if we are sure that they are unsatisfiable. 
+     */
     public boolean isSatisfiable() {
-	switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
-	case UNSAT: return false;
-	case SAT: case UNKNOWN: return true;
-	case ERROR: default: return true; //FIXME:throw exception
-	}
+	return true;
+	// //FIXME: replace by isUnsatisfiable, which makes more sense.
+	// switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
+	// case UNSAT: return false;
+	// case SAT: case UNKNOWN: return true;
+	// case ERROR: default: return true; //FIXME:throw exception
+	// }
     }
 }

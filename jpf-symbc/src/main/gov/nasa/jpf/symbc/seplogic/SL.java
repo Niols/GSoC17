@@ -219,10 +219,10 @@ public class SL {
 	}
     }
     
-    public static Tree Tree(SeplogicVariable variable, Set<String> labels) {
+    public static TreeExpr Tree(SeplogicVariable variable, Set<String> labels) {
 	switch(getBackend()) {
-	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.Tree(variable, labels);
-	case None: default: return new Tree(variable, labels);
+	case Cyclist: return new gov.nasa.jpf.symbc.seplogic.Cyclist.TreeExpr(variable, labels);
+	case None: default: return new TreeExpr(variable, labels);
 	}
     }
     
@@ -254,6 +254,10 @@ public class SL {
 	throw new UnknownVariableException();
     }
 
+    public static SeplogicVariable freshVariable(SeplogicType t) {
+	return Variable(new SymbolicInteger(), t);
+    }
+    
     /* PointstoExpr */
 
     public static PointstoExpr Pointsto(SymbolicInteger n, SeplogicValue v) {

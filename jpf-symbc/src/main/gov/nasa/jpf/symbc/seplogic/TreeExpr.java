@@ -37,58 +37,83 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.StringJoiner;
 
-public class PointstoExpr implements SeplogicExpression {
-    private final SeplogicVariable l;
-    private final SeplogicValue v;
+public class TreeExpr implements AppliedPredicate {
+    
+    private final Set<String> labels;
+    private final SeplogicVariable variable;
 
-    public PointstoExpr(SeplogicVariable l, SeplogicValue v) {
-	this.l = l;
-	this.v = v;
-    }
-
-    public SeplogicVariable getVariable() {
-	//FIXME: remove
-	return l;
-    }
-
-    public SeplogicValue getValue() {
-	//FIXME: remove
-	return v;
-    }
-
-    public SeplogicVariable getPointer() {
-	return l;
-    }
-
-    public SeplogicValue getTarget() {
-	return v;
+    public TreeExpr(SeplogicVariable variable, Set<String> labels) {
+	this.variable = variable;
+	this.labels = labels;
     }
 
     public String toString(boolean withTypes) {
-	return l.toString(withTypes) + " -> " + v.toString(withTypes);
-    }
+	StringJoiner joiner = new StringJoiner(",");
+	for (String label : labels) joiner.add(label);
 
+	return variable.toString(withTypes) + " -> Tree(" + joiner.toString() + ")";
+    }
+    
     public String toString() {
 	return toString(false);
     }
-
-    public SeplogicExpression copy() {
+    
+    public TreeExpr simplify() {
 	return this;
     }
-
-    public SeplogicExpression simplify() {
-	return this.copy();
-    }
-
+    
     public Set<SeplogicVariable> getFreeVariables() {
-	Set<SeplogicVariable> fv = getPointer().getFreeVariables();
-	fv.addAll(getTarget().getFreeVariables());
-	return fv;
+	Set<SeplogicVariable> s = new HashSet<SeplogicVariable>();
+	s.add(variable);
+	return s;
     }
 
     public Set<SeplogicVariable> getConstrainedVariables() {
-	return getTarget().getFreeVariables();
+	Set<SeplogicVariable> s = new HashSet<SeplogicVariable>();
+	s.add(variable);
+	return s;
+    }
+
+    public SeplogicVariable getVariable() {
+	return variable;
+    }
+
+    public Set<String> getLabels() {
+	return labels;
+    }
+    
+    public TreePredicate getPredicate() {
+	return SL.TreePredicate(getLabels());
+    }
+
+    public Set<SeplogicExpression> unfold() {
+	
+	/* Get all the labels as an array. */
+	String[] dummy = {};
+	String[] labelsArray = labels.toArray(dummy);
+
+	/* Associate a fresh variable to each label. */
+	SeplogicVariable[] freshVars = new SeplogicVariable[labelsArray.length];
+	for (int i = 0; i < freshVars.length; i++)
+	    freshVars[i] = SL.freshVariable(SL.IntType());
+	
+	SeplogicExpression[] se = new SeplogicExpression[1 + freshVars.length];
+
+	//FIXME: se[0] = SL.Pointsto(variable, SL.Record());
+	
+	/* Add a predicate for each fresh variable introduced. */
+	for (int i = 1 ; i < freshVars.length+1 ; i++)
+	    se[i] = getPredicate().apply(freshVars[i]);
+
+	/* Create the set containing this expression and the dummy
+	 * var=nil expression. */
+	Set<SeplogicExpression> s = new HashSet<SeplogicExpression>();
+	s.add(SL.Eq(variable, SL.Null()));
+	s.add(SL.Star(se));
+	return s;
     }
 }

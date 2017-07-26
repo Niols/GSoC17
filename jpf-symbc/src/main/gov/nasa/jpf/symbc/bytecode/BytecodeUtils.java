@@ -305,20 +305,23 @@ public class BytecodeUtils {
 	     * Set<SeplogicPredicate>. */
 	    
 	    Map<String,Set<SeplogicPredicate>> seplogicPreconditions = new HashMap<String,Set<SeplogicPredicate>>();
-	    
-	    for (String precondition : conf.getStringArray("symbolic.seplogic.precondition")) {
-		precondition = precondition.trim();
+	    String[] stringPreconditions = conf.getStringArray("symbolic.seplogic.precondition");
 
-		String key = precondition.split("->", 2)[0];
+	    if (stringPreconditions != null) {
+		for (String precondition : stringPreconditions) {
+		    precondition = precondition.trim();
 
-		Set<SeplogicPredicate> s = seplogicPreconditions.get(key);
-		if (s == null) {
-		    s = new HashSet<SeplogicPredicate>();
-		    seplogicPreconditions.put(key, s);
+		    String key = precondition.split("->", 2)[0];
+
+		    Set<SeplogicPredicate> s = seplogicPreconditions.get(key);
+		    if (s == null) {
+			s = new HashSet<SeplogicPredicate>();
+			seplogicPreconditions.put(key, s);
+		    }
+
+		    SeplogicPredicate value = SL.predicateOfString(precondition.split("->", 2)[1]);
+		    s.add(value);
 		}
-
-		SeplogicPredicate value = SL.predicateOfString(precondition.split("->", 2)[1]);
-		s.add(value);
 	    }
 	    
 	    for (int j = 0; j < argSize; j++) { // j ranges over actual arguments

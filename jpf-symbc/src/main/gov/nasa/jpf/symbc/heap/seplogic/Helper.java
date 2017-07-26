@@ -208,8 +208,7 @@ public class Helper {
 	    superClass = superClass.getSuperClass();
 	}
 
-	SeplogicRecord r = SL.Record(fields, symbolicIntegers);
-	PC._star(SL.Pointsto(newSymRef, r));
+	PC.addPointsto(SL.Variable(newSymRef, SL.IntType()), SL.Record(fields, symbolicIntegers));
 
 	// create new HeapNode based on above info
 	// update associated symbolic input heap

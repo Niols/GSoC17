@@ -35,36 +35,47 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.symbc.seplogic;
+package gov.nasa.jpf.symbc.seplogic.Cyclist;
 
 import java.util.Set;
+import java.util.HashSet;
 
-/**
- * The interface for separation logic expressions.
- */
-public interface SeplogicExpression {
+/* SPF+SL imports */
+import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
+import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
+
+public class TreeExpr extends gov.nasa.jpf.symbc.seplogic.TreeExpr implements SeplogicExpression, CyclistConvertible {
+
+    public TreeExpr(SeplogicVariable variable, Set<String> labels) {
+	super(variable, labels);
+    }
     
-    public String toString();
-    public String toString(boolean withTypes);
+    public String toCyclistString() {
+	return getPredicate().uniqueName() + "(" + ((CyclistConvertible) getVariable()).toCyclistString() + ")";
+    }
 
-    /**
-     * Returns the set of free variables. Free variables are all the
-     * variables that appear in an expression, without being
-     * quantified on. In our case, and since there is no
-     * quantification, that means all the variables.
-     */
-    public Set<SeplogicVariable> getFreeVariables();
+    public Set<String> cyclistPredicateDefinitions() {
+	String name = getPredicate().uniqueName();
 
-    /**
-     * Returns the set of constrained variables. Those variables are
-     * all the variables that are free but appear as the pointer of a
-     * ". -> .", as an alias of a known constrained variable, or in a
-     * predicate.
-     */
-    public Set<SeplogicVariable> getConstrainedVariables(); //FIXME: handle aliasing
-    
-    /**
-     * Simplifies the expression into an equivalent one.
-     */
-    public SeplogicExpression simplify();
+	//FIXME: wont work if there are other fields. we have to be
+	//clever to discover them. but we also have to know how to
+	//write that in Cyclist.
+
+	/* Begin predicate */
+	String repr = name + " {\n";
+
+	/* Null case */
+	repr += "  p=nil => " + name + "(p)\n";
+
+	/*  */
+	repr += "  p->";
+
+	/* End predicate */
+	repr += "}"; //FIXME: incomplete, lacks the most important rule
+	
+	Set<String> s = new HashSet<String>();
+	s.add(repr);
+
+	return s;
+    }
 }

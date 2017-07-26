@@ -37,6 +37,7 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
+import java.util.HashSet;
 import java.util.Set;
 
 public class BinopExpr implements SeplogicExpression {
@@ -63,15 +64,11 @@ public class BinopExpr implements SeplogicExpression {
     }
     
     public String toString(boolean withTypes) {
-	return l.toString(withTypes) + " " + b.toString() + " " + v.toString(withTypes);
+	return "(" + l.toString(withTypes) + " " + b.toString() + " " + v.toString(withTypes) + ")";
     }
 
     public String toString() {
 	return toString(false);
-    }
-
-    public SeplogicExpression copy() {
-	return this;
     }
 
     public SeplogicExpression simplify() {
@@ -88,5 +85,9 @@ public class BinopExpr implements SeplogicExpression {
 	Set<SeplogicVariable> fv = getLhs().getFreeVariables();
 	fv.addAll(getRhs().getFreeVariables());
 	return fv;
+    }
+
+    public Set<SeplogicVariable> getConstrainedVariables() {
+	return new HashSet<SeplogicVariable>(); //FIXME: handle aliasing
     }
 }

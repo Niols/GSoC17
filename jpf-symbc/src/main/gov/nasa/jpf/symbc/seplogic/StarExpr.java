@@ -37,8 +37,9 @@
 
 package gov.nasa.jpf.symbc.seplogic;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.StringJoiner;
 
 public class StarExpr implements SeplogicExpression {
     private final SeplogicExpression[] exprs;
@@ -54,19 +55,9 @@ public class StarExpr implements SeplogicExpression {
     }
 
     public String toString(boolean withTypes) {
-	if (exprs == null || exprs.length == 0)
-	    return "";
-
-	if (exprs.length == 1)
-	    return exprs[0].toString(withTypes);
-	
-	String repr = "(";
-	
-	for (int i = 0; i < exprs.length - 1; i++) {
-	    repr += exprs[i].toString(withTypes) + ") * (";
-	}
-
-	return repr + exprs[exprs.length - 1].toString(withTypes) + ")";
+	StringJoiner joiner = new StringJoiner(" * ");
+	for (SeplogicExpression expr : exprs) joiner.add(expr.toString(withTypes));
+	return joiner.toString();
     }
 
     public String toString() {
@@ -163,5 +154,12 @@ public class StarExpr implements SeplogicExpression {
 	for (SeplogicExpression e : getExpressions())
 	    fv.addAll(e.getFreeVariables());
 	return fv;
+    }
+
+    public Set<SeplogicVariable> getConstrainedVariables() {
+	Set<SeplogicVariable> cv = new HashSet<SeplogicVariable>();
+	for (SeplogicExpression e : getExpressions())
+	    cv.addAll(e.getConstrainedVariables());
+	return cv;
     }
 }
