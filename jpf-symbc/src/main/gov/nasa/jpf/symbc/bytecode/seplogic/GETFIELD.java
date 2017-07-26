@@ -214,7 +214,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	if (SL.debugMode)
 	    System.out.println("GETFIELD: " + PC);
 
-	if (! PC.isSatisfiable()) {
+	if (PC.isUnsat()) {
 	    if (SL.debugMode)
 		System.out.println("GETFIELD: PC is not satisfiable; ignoring state.");
 	    

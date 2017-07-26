@@ -85,7 +85,7 @@ public class PathCondition {
     }
 
     public String toString() {
-	return "PC[" + (isSatisfiable() ? " sat " : "unsat") + "]: " + toSeplogicExpression().toString();
+	return "PC" + (isUnsat() ? "[UNSAT]" : "") + ": " + toSeplogicExpression().toString();
     }
 
     /**
@@ -95,7 +95,9 @@ public class PathCondition {
      */
     public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
 
-	//FIXME: handle aliasing
+	SeplogicVariable lRepr = aliases.find(l);
+	SeplogicVariable vRepr = aliases.find(v);
+	
 	//FIXME: handle unfolding
 
 	for (SeplogicExpression constraint : constraints) {
@@ -103,11 +105,11 @@ public class PathCondition {
 	    if (constraint instanceof PointstoExpr) {
 		PointstoExpr pe = (PointstoExpr) constraint;
 
-		if (pe.getPointer().equals(l)) {
+		if (aliases.find(pe.getPointer()).equals(lRepr)) {
 		    SeplogicRecord r = (SeplogicRecord) pe.getTarget();
 
 		    constraints.remove(constraint);
-		    constraints.add(SL.Pointsto(l, r.update(f, v)));
+		    constraints.add(SL.Pointsto(lRepr, r.update(f, vRepr)));
 		    
 		    return;
 		}
@@ -133,18 +135,23 @@ public class PathCondition {
 	constraints.add(e);
     }
 
-    /**
-     * Tests the satisfiability of the constraint. When in doubt, this
-     * is considered satisfiable, because we only want to prune pathes
-     * if we are sure that they are unsatisfiable. 
-     */
-    public boolean isSatisfiable() {
-	return true;
-	// //FIXME: replace by isUnsatisfiable, which makes more sense.
-	// switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
-	// case UNSAT: return false;
-	// case SAT: case UNKNOWN: return true;
-	// case ERROR: default: return true; //FIXME:throw exception
-	// }
+    /** Test the unsatisfiability of the constraint. */
+    public boolean isUnsat() {
+	return false;
     }
+    
+    // /**
+    //  * Tests the satisfiability of the constraint. When in doubt, this
+    //  * is considered satisfiable, because we only want to prune pathes
+    //  * if we are sure that they are unsatisfiable. 
+    //  */
+    // public boolean isSatisfiable() {
+    // 	return true;
+    // 	// //FIXME: replace by isUnsatisfiable, which makes more sense.
+    // 	// switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
+    // 	// case UNSAT: return false;
+    // 	// case SAT: case UNKNOWN: return true;
+    // 	// case ERROR: default: return true; //FIXME:throw exception
+    // 	// }
+    // }
 }

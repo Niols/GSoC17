@@ -255,7 +255,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	if (SL.debugMode)
 	    System.out.println("ALOAD: " + PC.toString());
 	
-	if (! PC.isSatisfiable()) {
+	if (PC.isUnsat()) {
 	    if (SL.debugMode)
 		System.out.println("ALOAD: PC is not satisfiable; ignoring state.");
 

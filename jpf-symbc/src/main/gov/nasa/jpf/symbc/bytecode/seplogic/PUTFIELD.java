@@ -119,9 +119,17 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	     * - objRef in symbolic and opVal is concrete. In that
 	     *   case, we can add a fresh variable to fill in the
 	     *   blanks. However, by doing so, we loose information!
+	     *   We could at least try to detect when this value is
+	     *   Nil, because this is what happens most of the
+	     *   time. This will allow us to avoid loosing too much
+	     *   information.
 	     *
 	     * FIXME: is that valid? */
 
+	    // if (objRefNode != null && opValNode == null) {
+	    // 	System.out.println("objRefNode is symbolic, opValNode is concrete, opVal=" + opVal + ", NULL=" + MJIEnv.NULL);
+	    // }
+	    
 	    if (objRefNode != null) {
 		/* If objRef is symbolic, get a representation for
 		 * opVal (either opValNode is not null, or a fresh
@@ -137,7 +145,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	    if (SL.debugMode)
 		System.out.println("PUTFIELD: " + PC);
 	    
-	    if (! PC.isSatisfiable()) {
+	    if (PC.isUnsat()) {
 		if (SL.debugMode)
 		    System.out.println("PUTFIELD: PC is not satisfiable; ignoring state.");
 		
