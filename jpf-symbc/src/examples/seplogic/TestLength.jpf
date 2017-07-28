@@ -1,4 +1,4 @@
-target = seplogic.TestExtends
+target = seplogic.TestLength
 
 classpath = ${jpf-symbc}/build/examples
 sourcepath = ${jpf-symbc}/src/examples 
@@ -8,5 +8,7 @@ symbolic.seplogic = true
 symbolic.seplogic.debug = true
 symbolic.seplogic.backend = Cyclist
 
-symbolic.method = seplogic.TestExtends.test(sym)
-symbolic.seplogic.precondition = seplogic.TestExtends.test#0->Tree(next)
+symbolic.method = seplogic.TestLength.length(sym)
+symbolic.seplogic.precondition = seplogic.TestLength.length#0->Tree(next)
+
+search.depth_limit = 10
