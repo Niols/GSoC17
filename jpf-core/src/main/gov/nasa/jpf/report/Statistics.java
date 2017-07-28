@@ -59,6 +59,7 @@ public class Statistics extends ListenerAdapter implements Cloneable {
   public int constraints = 0;
   public long visitedStates = 0;
   public long endStates = 0;
+  public long ignoredStates = 0;
   public int maxDepth = 0;
   
   public int gcCycles = 0;
@@ -159,6 +160,9 @@ public class Statistics extends ListenerAdapter implements Cloneable {
       }
     } else {
       visitedStates++;
+    }
+    if (search.isIgnoredState()) {
+	ignoredStates++;
     }
     if (search.isEndState()){
       endStates++;

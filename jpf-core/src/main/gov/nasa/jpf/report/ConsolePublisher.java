@@ -366,8 +366,11 @@ public class ConsolePublisher extends Publisher {
     Statistics stat = reporter.getStatistics();
 
     pw.println("elapsed time:       " + formatHMS(reporter.getElapsedTime()));
-    pw.println("states:             new=" + stat.newStates + ",visited=" + stat.visitedStates
-            + ",backtracked=" + stat.backtracked + ",end=" + stat.endStates);
+    pw.println("states:             new=" + stat.newStates
+	       + ",visited=" + stat.visitedStates
+	       + ",backtracked=" + stat.backtracked
+	       + ",end=" + stat.endStates
+	       + ",ignored=" + stat.ignoredStates);
     pw.println("search:             maxDepth=" + stat.maxDepth + ",constraints=" + stat.constraints);
     pw.println("choice generators:  thread=" + stat.threadCGs
             + " (signal=" + stat.signalCGs + ",lock=" + stat.monitorCGs + ",sharedRef=" + stat.sharedAccessCGs
