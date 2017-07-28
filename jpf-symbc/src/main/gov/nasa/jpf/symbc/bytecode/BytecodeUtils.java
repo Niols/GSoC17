@@ -61,6 +61,11 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 /* SPF+SL imports */
+import gov.nasa.jpf.symbc.heap.seplogic.Constraint;
+import gov.nasa.jpf.symbc.heap.seplogic.Tree;
+import gov.nasa.jpf.symbc.heap.seplogic.Predicate;
+import gov.nasa.jpf.symbc.heap.seplogic.FullPredicate;
+
 import gov.nasa.jpf.symbc.seplogic.SL;
 import gov.nasa.jpf.symbc.seplogic.SeplogicPredicate;
 
@@ -304,7 +309,7 @@ public class BytecodeUtils {
 	     * and put them all in a map from String to
 	     * Set<SeplogicPredicate>. */
 	    
-	    Map<String,Set<SeplogicPredicate>> seplogicPreconditions = new HashMap<String,Set<SeplogicPredicate>>();
+	    Map<String,Set<Predicate>> heapPreconditions = new HashMap<String,Set<Predicate>>();
 	    String[] stringPreconditions = conf.getStringArray("symbolic.seplogic.precondition");
 
 	    if (stringPreconditions != null) {
@@ -313,14 +318,19 @@ public class BytecodeUtils {
 
 		    String key = precondition.split("->", 2)[0];
 
-		    Set<SeplogicPredicate> s = seplogicPreconditions.get(key);
+		    Set<Predicate> s = heapPreconditions.get(key);
 		    if (s == null) {
-			s = new HashSet<SeplogicPredicate>();
-			seplogicPreconditions.put(key, s);
+			s = new HashSet<Predicate>();
+			heapPreconditions.put(key, s);
 		    }
 
-		    SeplogicPredicate value = SL.predicateOfString(precondition.split("->", 2)[1]);
-		    s.add(value);
+		    if (precondition.split("->", 2)[1].trim().equals("Tree(next)")) { //FIXME: hardcoded; beurk
+			Set<String> fields = new HashSet<String>();
+			fields.add("next");
+			s.add(new Tree(fields));
+		    } else {
+			System.err.println("Could not parse precondition: " + precondition);
+		    }
 		}
 	    }
 	    
@@ -496,10 +506,12 @@ public class BytecodeUtils {
 			    String fname = cname + '.' + mname.substring(0, mname.indexOf('('));
 			    String vname = fname + "#" + localVarsIdx;
 
-			    Set<SeplogicPredicate> preconditions = seplogicPreconditions.get(vname);
-			    if (preconditions != null)
-				for (SeplogicPredicate pred : preconditions)
-				    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addStaticConstraint(pred.apply(SL.Variable(sym_v, null)));
+			    Set<Predicate> preconditions = heapPreconditions.get(vname);
+			    if (preconditions != null) {
+			    	for (Predicate predicate : preconditions) {
+			    	    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addStaticConstraint(new FullPredicate(sym_v, predicate));
+				}
+			    }
 			    
 			    expressionMap.put(name, sym_v);
 			    sf.setOperandAttr(stackIdx, sym_v);

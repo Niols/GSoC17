@@ -138,8 +138,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 		/* Since we are updating a field, we know that both
 		 * our variables are of type int. */
 		
-		PC.updateField(SL.Variable(objRefNode, SL.IntType()), fname,
-			       SL.Variable((opValNode != null) ? opValNode : new SymbolicInteger(), SL.IntType()));
+		PC.updateField(objRefNode, fname, (opValNode != null) ? opValNode : new SymbolicInteger());
 	    }
 
 	    if (SL.debugMode)

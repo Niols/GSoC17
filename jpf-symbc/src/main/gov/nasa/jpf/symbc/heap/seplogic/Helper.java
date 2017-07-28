@@ -18,6 +18,10 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
+/* Java imports */
+import java.util.Map;
+import java.util.HashMap;
+
 /* JPF imports */
 import gov.nasa.jpf.vm.BooleanFieldInfo;
 import gov.nasa.jpf.vm.ClassInfo;
@@ -208,13 +212,20 @@ public class Helper {
 	    superClass = superClass.getSuperClass();
 	}
 
-	PC.addPointsto(SL.Variable(newSymRef, SL.IntType()), SL.Record(fields, symbolicIntegers));
-
 	// create new HeapNode based on above info
 	// update associated symbolic input heap
-	HeapNode n= new HeapNode(daIndex, typeClassInfo, newSymRef);
+	HeapNode n = new HeapNode(daIndex, typeClassInfo, newSymRef);
 	symInputHeap._add(n);
 
+	/* Update the constraint. */
+
+	Map<String,SymbolicInteger> fieldsMap = new HashMap<String,SymbolicInteger>();
+	for(int i = 0 ; i < fields.length ; i++)
+	    fieldsMap.put(fields[i].getName(), symbolicIntegers[i]);
+
+	PC.addEq((SymbolicInteger) attr, newSymRef);
+	PC.addRecord((SymbolicInteger) attr, fieldsMap);
+	
 	return daIndex;
     }
 }

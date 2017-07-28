@@ -171,22 +171,12 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
 	    daIndex = candidateNode.getIndex();
 
-	    SeplogicVariable candidateNodeVar;
-	    try {
-		candidateNodeVar = SL.Variable(candidateNode.getSymbolic());
-	    }
-	    catch (UnknownVariableException ex) {
-		System.err.println("ERROR: SHOULD NOT HAPPEN."); // FIXME: kill SPF?
-		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType());
-	    }
-
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, candidateNodeVar.getType()),
-		     candidateNodeVar);
+	    PC.addEq((SymbolicInteger) attr, candidateNode.getSymbolic());
 	}
 	else if (currentChoice == numSymRefs){ //null object
 	    daIndex = MJIEnv.NULL;
 
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, SL.IntType()), SL.Null());
+	    PC.addNil((SymbolicInteger) attr);
 	}
 	else if (currentChoice == (numSymRefs + 1) && !abstractClass) {
 	    // creates a new object with all fields symbolic and adds the object to SymbolicHeap
@@ -196,16 +186,7 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
 	    assert freshNode != null;
 
-	    SeplogicVariable freshNodeVar;
-	    try {
-		freshNodeVar = SL.Variable(freshNode);
-	    }
-	    catch (UnknownVariableException ex) {
-		System.err.println("ERROR: SHOULD NOT HAPPEN."); // FIXME: kill SPF?
-		freshNodeVar = SL.Variable(freshNode, SL.IntType());
-	    }
-
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, freshNodeVar.getType()), freshNodeVar);
+	    PC.addEq((SymbolicInteger) attr, freshNode);
 	}
 	else {
 	    System.err.println("subtyping not handled");

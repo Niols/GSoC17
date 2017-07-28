@@ -22,70 +22,54 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/* SPF+SL imports */
-import gov.nasa.jpf.symbc.seplogic.PointstoExpr;
-import gov.nasa.jpf.symbc.seplogic.SatResult;
-import gov.nasa.jpf.symbc.seplogic.SeplogicExpression;
-import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
-import gov.nasa.jpf.symbc.seplogic.SeplogicValue;
-import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
-import gov.nasa.jpf.symbc.seplogic.SL;
+/* SPF imports */
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
-public class PathCondition {
+public class PathCondition
+{
+    /* Static part of the path condition */
+
+    private static Constraint staticConstraint = null;
+
+    public static void addStaticConstraint(FullPredicate fullPredicate) {
+	if (staticConstraint == null)
+	    staticConstraint = new Constraint();
+
+	try {
+	    staticConstraint.addPredicate(fullPredicate);
+	} catch (UnsatException e) {
+	    System.err.println("Inconsistent preconditions");
+	    //FIXME: here, we must kill SPF and complain that the
+	    //preconditions are not sat.
+	}
+    }
     
-    private static Set<SeplogicExpression> staticConstraints = null;
-    private Set<SeplogicExpression> constraints;
-    private UnionFind<SeplogicVariable> aliases;
+    /* Dynamic part */
 
-    public PathCondition(Set<SeplogicExpression> constraints,
-			 UnionFind<SeplogicVariable> aliases) {
-	this.constraints = constraints;
-	this.aliases = aliases;
+    private Constraint constraint;
+    private boolean unsat;
+
+    public PathCondition(Constraint constraint, boolean unsat) {
+	this.constraint = constraint;
+	this.unsat = unsat;
     }
     
     public PathCondition() {
-
-	if (staticConstraints == null)
-	    this.constraints = new HashSet<SeplogicExpression>();
-	else
-	    this.constraints = new HashSet<SeplogicExpression>(staticConstraints);
-
-	this.aliases = new HashMapUnionFind<SeplogicVariable>();
-    }
-    
-    public static void addStaticConstraint(SeplogicExpression constraint) {
-	if (staticConstraints == null)
-	    staticConstraints = new HashSet<SeplogicExpression>();
-	staticConstraints.add(constraint);
+	this((staticConstraint != null) ? staticConstraint.clone() : new Constraint(), false);
     }
 
-    /** Returns the separation logic expression corresponding to that
-     * path condition. */
-    public SeplogicExpression toSeplogicExpression() {
-
-	/* We first recover the constraints, and add all the equalities. */
-	Set<SeplogicExpression> allConstraints = new HashSet<SeplogicExpression>(constraints);
-	for (UnionFind.Entry<SeplogicVariable> equality : aliases.getAll()) {
-	    allConstraints.add(SL.Eq(equality.getNonRepresentant(),
-				     equality.getRepresentant()));
-	}
-	
-	SeplogicExpression[] dummy = {};
-	return SL.Star(allConstraints.toArray(dummy));
-    }
-    
     /**
      * Shallow cloning of the path condition. Deep cloning is not
      * needed because the only modifications that are authorised on
      * separation logic expressions are local.
      */
     public PathCondition clone() {
-	return new PathCondition(new HashSet<SeplogicExpression>(constraints),
-				 new HashMapUnionFind(aliases));
+	return new PathCondition(constraint.clone(), unsat);
     }
 
     public String toString() {
-	return "PC" + (isUnsat() ? "[UNSAT]" : "") + ": " + toSeplogicExpression().toString();
+	return "";
+	//return "PC" + (isUnsat() ? " is now UNSAT. Last consistent state" : "") + ": " + constraint.toString();
     }
 
     /**
@@ -93,65 +77,52 @@ public class PathCondition {
      * then updates the constraint to represent the new constraint,
      * where the field f of l is the reference v.
      */
-    public void updateField(SeplogicVariable l, String f, SeplogicVariable v) {
-
-	SeplogicVariable lRepr = aliases.find(l);
-	SeplogicVariable vRepr = aliases.find(v);
-	
-	//FIXME: handle unfolding
-
-	for (SeplogicExpression constraint : constraints) {
-
-	    if (constraint instanceof PointstoExpr) {
-		PointstoExpr pe = (PointstoExpr) constraint;
-
-		if (aliases.find(pe.getPointer()).equals(lRepr)) {
-		    SeplogicRecord r = (SeplogicRecord) pe.getTarget();
-
-		    constraints.remove(constraint);
-		    constraints.add(SL.Pointsto(lRepr, r.update(f, vRepr)));
-		    
-		    return;
-		}
-	    }
-	}
-
-	assert (false);
-    }
-
-    public void addEq(SeplogicVariable x, SeplogicValue v) {
-	if (v instanceof SeplogicVariable) {
-	    aliases.union(x, (SeplogicVariable) v);
-	} else {
-	    _star(SL.Eq(x,v));
+    public void updateField(SymbolicInteger l, String f, SymbolicInteger v) {
+	try {
+	    this.constraint.updateField(l, f, v);
+	} catch (UnsatException e) {
+	    System.out.println("Adding " + l.hashCode() + "." + f + "->" + v.hashCode() + " made unsatisfiable " + toString());
 	}
     }
 
-    public void addPointsto(SeplogicVariable x, SeplogicValue e) {
-	_star(SL.Pointsto(x, e));
+    public void addNil(SymbolicInteger x) {
+	try {
+	    this.constraint.addNil(x);
+	} catch (UnsatException e) {
+	    System.out.println("Adding " + x.hashCode() + "=nil made unsatisfiable " + toString());
+	    this.unsat = true;
+	}
     }
 
-    private void _star(SeplogicExpression e) {
-	constraints.add(e);
+    public void addEq(SymbolicInteger x, SymbolicInteger y) {
+	try {
+	    this.constraint.addEq(x, y);
+	} catch (UnsatException e) {
+	    System.out.println("Adding " + x.hashCode() + "=" + y.hashCode() + " made unsatisfiable " + toString());
+	    this.unsat = true;
+	}
     }
 
-    /** Test the unsatisfiability of the constraint. */
-    public boolean isUnsat() {
-	return false;
+    public void addNeq(SymbolicInteger x, SymbolicInteger y) {
+	try {
+	    this.constraint.addNeq(x, y);
+	} catch (UnsatException e) {
+	    System.out.println("Adding " + x.hashCode() + "!=" + y.hashCode() + " made unsatisfiable " + toString());
+	    this.unsat = true;
+	}
+    }
+
+    public void addRecord(SymbolicInteger x, Map<String,SymbolicInteger> fieldsMap) {
+	try {
+	    this.constraint.addRecord(x, fieldsMap);
+	} catch (UnsatException e) {
+	    System.out.println("Adding " + x.hashCode() + "->{|...|} made unsatisfiable " + toString());
+	    this.unsat = true;
+	}
     }
     
-    // /**
-    //  * Tests the satisfiability of the constraint. When in doubt, this
-    //  * is considered satisfiable, because we only want to prune pathes
-    //  * if we are sure that they are unsatisfiable. 
-    //  */
-    // public boolean isSatisfiable() {
-    // 	return true;
-    // 	// //FIXME: replace by isUnsatisfiable, which makes more sense.
-    // 	// switch(SL.getProver().isSatisfiable(toSeplogicExpression())) {
-    // 	// case UNSAT: return false;
-    // 	// case SAT: case UNKNOWN: return true;
-    // 	// case ERROR: default: return true; //FIXME:throw exception
-    // 	// }
-    // }
+    /** Test the unsatisfiability of the constraint. */
+    public boolean isUnsat() {
+	return this.unsat;
+    }
 }

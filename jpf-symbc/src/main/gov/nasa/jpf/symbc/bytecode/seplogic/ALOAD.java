@@ -195,17 +195,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = candidateNode.getIndex();	    
 
-	    SeplogicVariable candidateNodeVar;
-	    try {
-		candidateNodeVar = SL.Variable(candidateNode.getSymbolic());
-	    }
-	    catch (UnknownVariableException ex) {
-		System.err.println("ERROR: SHOULD NEVER HAPPEN."); //FIXME: kill SPF?
-		candidateNodeVar = SL.Variable(candidateNode.getSymbolic(), SL.IntType()); // FIXME: can't be
-	    }
-	    
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, candidateNodeVar.getType()),
-		     candidateNodeVar);
+	    PC.addEq((SymbolicInteger) attr, candidateNode.getSymbolic());
 	}
 	else if (currentChoice == prevSymRefs.length
 		 && !(((IntegerExpression) attr).toString()).contains("this")) {
@@ -215,8 +205,7 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    daIndex = MJIEnv.NULL;
 
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, SL.IntType()),
-		     SL.Null());
+	    PC.addNil((SymbolicInteger) attr);
 	}
 	else if ((currentChoice == (prevSymRefs.length + 1) && !abstractClass)
 		 || (currentChoice == prevSymRefs.length && (((IntegerExpression) attr).toString()).contains("this"))) {
@@ -225,22 +214,6 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
 	    boolean shared = (ei == null ? false : ei.isShared());
 	    daIndex = Helper.addNewHeapNode(typeClassInfo, th, attr, symInputHeap, shared, PC);
-
-	    /* Get the newly created node. */
-
-	    SymbolicInteger freshNode = symInputHeap.getNode(daIndex);
-	    assert freshNode != null;
-
-	    SeplogicVariable freshNodeVar;
-	    try {
-		freshNodeVar = SL.Variable(freshNode);
-	    }
-	    catch (UnknownVariableException ex) {
-		System.err.println("ERROR: SHOULD NEVER HAPPEN."); //FIXME: kill SPF?
-		freshNodeVar = SL.Variable(freshNode, SL.IntType()); // FIXME: can't be
-	    }
-
-	    PC.addEq(SL.Variable((SymbolicInteger) attr, freshNodeVar.getType()), freshNodeVar);
 	}
 	else {
 	    /* Otherwise, we are in the case of subtypes, which is not
@@ -253,11 +226,11 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	 * if it is satisfiable, and kill that state if it is not. */
 
 	if (SL.debugMode)
-	    System.out.println("ALOAD: " + PC.toString());
+	    System.out.println("ALOAD:    " + PC.toString());
 	
 	if (PC.isUnsat()) {
 	    if (SL.debugMode)
-		System.out.println("ALOAD: PC is not satisfiable; ignoring state.");
+		System.out.println("ALOAD:    PC is unsatisfiable; ignoring state.");
 
 	    th.getVM().getSystemState().setIgnored(true);
 	    return getNext(th);
