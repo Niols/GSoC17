@@ -1,0 +1,54 @@
+#!/bin/sh
+
+printf 'Building docker image...\n'
+docker build -t gsoc .
+printf 'Build finished.\n\n'
+
+cat <<EOF
+Benchmark 1
+-----------
+
+In this benchmark, we compute the length of an object that is a
+list. However, the list contains booleans that indicated whether or
+not we have already seen this node, allowing a detection (in Java, not
+in SPF) of cyclic lists.
+
+This is meant to compare the overheads of the lazy and the seplogic
+techniques. The seplogic seems to have an advantage, probably because
+it does not call external provers, and because the way constraints are
+solved in seplogic is incremental (basically, at each new constraint,
+we check that the structure is still consistent. This is close to
+constant time).
+
+                 |   Lazy   |        Seplogic          |
+                 |----------|--------------------------|
+| Depth | States |   Time   |   Time   | Pruned states |
+|-------|--------|----------|----------|---------------|
+EOF
+
+for depth in $(seq 50 50 1000)
+do
+    printf '| %5d |' "$depth"
+    
+    for lazy in true false
+    do
+	$lazy && seplogic=false || seplogic=true
+
+	output=$(docker run gsoc jpf-symbc/src/examples/seplogic/TestNoncyclic.jpf \
+			+symbolic.lazy=$lazy +symbolic.seplogic=$seplogic \
+			+search.depth_limit=$depth \
+			2>/dev/null \
+		     | tail -n 60)
+
+	time=$(printf -- "$output" | sed -n 's/^elapsed time:[ \t]*\(..:..:..\)/\1/p')
+	states=$(printf -- "$output" | sed -n 's/states.*new=\(.[^,]*\),.*/\1/p')
+	pruned=$(printf -- "$output" | sed -n 's/states.*ignored=\(.[^,]*\).*/\1/p')
+
+	if $lazy
+	then
+	    printf ' %6d | %s |' "$states" "$time"
+	else
+	    printf ' %s | %6d (%3d%%) |\n' "$time" "$pruned" "$((100 * pruned / states))"
+	fi
+    done
+done

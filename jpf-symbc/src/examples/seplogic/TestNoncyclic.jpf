@@ -1,0 +1,15 @@
+target = seplogic.TestNoncyclic
+
+classpath = ${jpf-symbc}/build/examples
+sourcepath = ${jpf-symbc}/src/examples
+type_classpath = ${jpf-symbc}/build/examples/seplogic
+
+search.multiple_errors = true
+symbolic.seplogic = true
+symbolic.seplogic.debug = true
+symbolic.seplogic.backend = Cyclist
+
+symbolic.method = seplogic.TestNoncyclic.length_noncyclic(sym)
+symbolic.seplogic.precondition = seplogic.TestNoncyclic.length_noncyclic#0->Tree(next)
+
+search.depth_limit = 10

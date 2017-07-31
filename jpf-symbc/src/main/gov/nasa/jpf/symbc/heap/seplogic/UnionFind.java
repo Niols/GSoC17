@@ -48,7 +48,7 @@ import java.util.StringJoiner;
 public class UnionFind<T>
 {
     public interface Mergeable {
-	public void merge(Mergeable other);
+	public Mergeable merge(Mergeable other);
     }
 
     private class Node<T>
@@ -123,13 +123,13 @@ public class UnionFind<T>
 
 	public void union(Node<T> other) {
 	    if (! this.isAncestor()) {
-		return find().union(other);
+		find().union(other);
 	    } else {
 		Node<T> otherAncestor = other.find();
 		if (this.getRank() > otherAncestor.getRank()) {
 		    this.addRank(otherAncestor.getRank());
 		    this.mergeAttr(otherAncestor.getAttr());
-		    return otherAncestor.union(this);
+		    otherAncestor.union(this);
 		} else {
 		    this.setFather(otherAncestor);
 		}
@@ -153,10 +153,24 @@ public class UnionFind<T>
 	}
     }
     
-    public UnionFind(UnionFind<T> other) {
-	this(other.entrySet());
-    }
+    // public UnionFind(UnionFind<T> other) {
+    // 	this(other.entrySet());
+    // }
     
-    private Node<T> getNode(T content) {
+    public Node<T> getNode(T content) {
+	Node<T> node = nodes.get(content);
+	if (node == null) {
+	    node = new Node<T>(content);
+	    nodes.put(content, node);
+	}
+	return node;
     }
+
+    // public Set<Node<T>> getAll() {
+    // 	Set<Node<T>> all = new HashSet<T>();
+    // 	for (Node<T> node : nodes.values()) {
+    // 	    all.add(node);
+    // 	}
+    // 	return all;
+    // }
 }
