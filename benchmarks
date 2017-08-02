@@ -20,10 +20,10 @@ solved in seplogic is incremental (basically, at each new constraint,
 we check that the structure is still consistent. This is close to
 constant time).
 
-                 |   Lazy   |        Seplogic          |
-                 |----------|--------------------------|
-| Depth | States |   Time   |   Time   | Pruned states |
-|-------|--------|----------|----------|---------------|
+                 |       Lazy        |            Seplogic               |
+                 |-------------------|-----------------------------------|
+| Depth | States |   Time   | Memory |   Time   | Memory | Pruned states |
+|-------|--------|----------|--------|----------|--------|---------------|
 EOF
 
 for depth in $(seq 50 50 1000)
@@ -40,15 +40,16 @@ do
 			2>/dev/null \
 		     | tail -n 60)
 
-	time=$(printf -- "$output" | sed -n 's/^elapsed time:[ \t]*\(..:..:..\)/\1/p')
-	states=$(printf -- "$output" | sed -n 's/states.*new=\(.[^,]*\),.*/\1/p')
-	pruned=$(printf -- "$output" | sed -n 's/states.*ignored=\(.[^,]*\).*/\1/p')
-
+      	time=$(printf -- "$output" | sed -n 's/^elapsed time:[ \t]*\(..:..:..\)/\1/p')
+	states=$(printf -- "$output" | sed -n 's/states:.*new=\(.[^,]*\),.*/\1/p')
+	pruned=$(printf -- "$output" | sed -n 's/states:.*ignored=\(.[^,]*\).*/\1/p')
+	memory=$(printf -- "$output" | sed -n 's/max memory:[^0-9]*\([0-9].*\)/\1/p')
+	
 	if $lazy
 	then
-	    printf ' %6d | %s |' "$states" "$time"
+	    printf ' %6d | %s | %6s |' "$states" "$time" "$memory"
 	else
-	    printf ' %s | %6d (%3d%%) |\n' "$time" "$pruned" "$((100 * pruned / states))"
+	    printf ' %s | %6s | %6d (%3d%%) |\n' "$time" "$memory" "$pruned" "$((100 * pruned / states))"
 	fi
     done
 done
