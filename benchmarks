@@ -35,6 +35,7 @@ do
 	$lazy && seplogic=false || seplogic=true
 
 	output=$(docker run gsoc jpf-symbc/src/examples/seplogic/TestNoncyclic.jpf \
+			+symbolic.debug=false +symbolic.seplogic.debug=false \
 			+symbolic.lazy=$lazy +symbolic.seplogic=$seplogic \
 			+search.depth_limit=$depth \
 			2>/dev/null \

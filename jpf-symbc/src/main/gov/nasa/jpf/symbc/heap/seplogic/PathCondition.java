@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 /* SPF imports */
+import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class PathCondition
@@ -68,8 +69,7 @@ public class PathCondition
     }
 
     public String toString() {
-	return "";
-	//return "PC" + (isUnsat() ? " is now UNSAT. Last consistent state" : "") + ": " + constraint.toString();
+	return "PC" + (isUnsat() ? " is now UNSAT. Last consistent state" : "") + ": " + constraint.toString();
     }
 
     /**
@@ -81,7 +81,10 @@ public class PathCondition
 	try {
 	    this.constraint.updateField(l, f, v);
 	} catch (UnsatException e) {
-	    System.out.println("Adding " + l.hashCode() + "." + f + "->" + v.hashCode() + " made unsatisfiable " + toString());
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Adding " + l.hashCode() + "." + f + "->" + v.hashCode() + " made unsatisfiable " + toString());
+	    }
+	    this.unsat = true;
 	}
     }
 
@@ -89,7 +92,9 @@ public class PathCondition
 	try {
 	    this.constraint.addNil(x);
 	} catch (UnsatException e) {
-	    System.out.println("Adding " + x.hashCode() + "=nil made unsatisfiable " + toString());
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Adding " + x.hashCode() + "=nil made unsatisfiable " + toString());
+	    }
 	    this.unsat = true;
 	}
     }
@@ -98,7 +103,9 @@ public class PathCondition
 	try {
 	    this.constraint.addEq(x, y);
 	} catch (UnsatException e) {
-	    System.out.println("Adding " + x.hashCode() + "=" + y.hashCode() + " made unsatisfiable " + toString());
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Adding " + x.hashCode() + "=" + y.hashCode() + " made unsatisfiable " + toString());
+	    }
 	    this.unsat = true;
 	}
     }
@@ -107,7 +114,9 @@ public class PathCondition
 	try {
 	    this.constraint.addNeq(x, y);
 	} catch (UnsatException e) {
-	    System.out.println("Adding " + x.hashCode() + "!=" + y.hashCode() + " made unsatisfiable " + toString());
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Adding " + x.hashCode() + "!=" + y.hashCode() + " made unsatisfiable " + toString());
+	    }
 	    this.unsat = true;
 	}
     }
@@ -116,7 +125,9 @@ public class PathCondition
 	try {
 	    this.constraint.addRecord(x, fieldsMap);
 	} catch (UnsatException e) {
-	    System.out.println("Adding " + x.hashCode() + "->{|...|} made unsatisfiable " + toString());
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Adding " + x.hashCode() + "->{|...|} made unsatisfiable " + toString());
+	    }
 	    this.unsat = true;
 	}
     }
