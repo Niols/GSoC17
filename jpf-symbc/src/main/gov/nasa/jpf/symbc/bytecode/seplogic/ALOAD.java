@@ -47,9 +47,6 @@ import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
-import gov.nasa.jpf.symbc.seplogic.SL;
-import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
-import gov.nasa.jpf.symbc.seplogic.UnknownVariableException;
 
 public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 
@@ -225,12 +222,14 @@ public class ALOAD extends gov.nasa.jpf.symbc.bytecode.ALOAD {
 	/* Now that this is done, we update our Path Condition, check
 	 * if it is satisfiable, and kill that state if it is not. */
 
-	if (SL.debugMode)
+	if (SymbolicInstructionFactory.debugMode) {
 	    System.out.println("ALOAD:    " + PC.toString());
+	}
 	
 	if (PC.isUnsat()) {
-	    if (SL.debugMode)
+	    if (SymbolicInstructionFactory.debugMode) {
 		System.out.println("ALOAD:    PC is unsatisfiable; ignoring state.");
+	    }
 
 	    th.getVM().getSystemState().setIgnored(true);
 	    return getNext(th);

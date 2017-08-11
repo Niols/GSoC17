@@ -53,8 +53,6 @@ import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 
 /* SPF+SL imports */
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
-import gov.nasa.jpf.symbc.seplogic.SL;
-import gov.nasa.jpf.symbc.seplogic.SeplogicRecord;
 
 public class Helper {
 

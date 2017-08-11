@@ -7,7 +7,8 @@ RUN apt-get update && apt-get install -y \
         openjdk-8-jdk-headless openjdk-8-jre-headless \
  	libz3-java \
  	mercurial ant \
-	build-essential autoconf libtool swig2.0 libgmp-dev antlr3 libantlr3c-dev libboost-dev
+	build-essential autoconf libtool swig2.0 libgmp-dev antlr3 libantlr3c-dev libboost-dev \
+	valgrind
 
 COPY .jpf /root
 
@@ -19,16 +20,12 @@ RUN cd /root/jpf-core && ant build
 COPY jpf-symbc /root/jpf-symbc
 RUN cd /root/jpf-symbc && ant build
 
-## Set up executables
-RUN cd /root/jpf-symbc/bin && chmod +x sl_satcheck.native
+## Set up environment
 ENV PATH=/root/jpf-symbc/bin:$PATH
-
-## Set up dynamic libraries
-RUN cd /root/jpf-symbc/lib && tar xJf libcvc4.so.tar.xz
 ENV LD_LIBRARY_PATH=/root/jpf-symbc/lib:$LD_LIBRARY_PATH
+ENV TERM=dumb
 
 ## Prepare for interactive mode.
-ENV TERM=dumb
 WORKDIR /root
 ENTRYPOINT ["java", "-jar", "/root/jpf-core/build/RunJPF.jar", "+jpf-home=/root", "+jpf-core=/root/jpf-core", "+jpf-symbc=/root/jpf-symbc", "+extensions=${jpf-core},${jpf-symbc}"]
 CMD []

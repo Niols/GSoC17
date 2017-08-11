@@ -4,9 +4,8 @@ classpath = ${jpf-symbc}/build/examples
 sourcepath = ${jpf-symbc}/src/examples 
 type_classpath = ${jpf-symbc}/build/examples/seplogic
 
+symbolic.debug = true
 symbolic.seplogic = true
-symbolic.seplogic.debug = true
-symbolic.seplogic.backend = Cyclist
 
 symbolic.method = seplogic.TestExtends.test(sym)
 symbolic.seplogic.precondition = seplogic.TestExtends.test#0->Tree(next)

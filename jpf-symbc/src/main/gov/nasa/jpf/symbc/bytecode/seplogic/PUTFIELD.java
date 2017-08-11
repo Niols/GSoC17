@@ -37,7 +37,6 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 /* SPF+SL imports */
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
-import gov.nasa.jpf.symbc.seplogic.SL;
 
 public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 
@@ -141,12 +140,14 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 		PC.updateField(objRefNode, fname, (opValNode != null) ? opValNode : new SymbolicInteger());
 	    }
 
-	    if (SL.debugMode)
+	    if (SymbolicInstructionFactory.debugMode) {
 		System.out.println("PUTFIELD: " + PC);
+	    }
 	    
 	    if (PC.isUnsat()) {
-		if (SL.debugMode)
+		if (SymbolicInstructionFactory.debugMode) {
 		    System.out.println("PUTFIELD: PC is not satisfiable; ignoring state.");
+		}
 		
 		ti.getVM().getSystemState().setIgnored(true);
 		return getNext(ti);

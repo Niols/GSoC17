@@ -45,9 +45,6 @@ import gov.nasa.jpf.symbc.heap.SymbolicInputHeap;
 import gov.nasa.jpf.symbc.heap.seplogic.HeapChoiceGenerator;
 import gov.nasa.jpf.symbc.heap.seplogic.Helper;
 import gov.nasa.jpf.symbc.heap.seplogic.PathCondition;
-import gov.nasa.jpf.symbc.seplogic.SL;
-import gov.nasa.jpf.symbc.seplogic.SeplogicVariable;
-import gov.nasa.jpf.symbc.seplogic.UnknownVariableException;
 
 public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 
@@ -192,12 +189,14 @@ public class GETFIELD extends gov.nasa.jpf.symbc.bytecode.GETFIELD {
 	    System.err.println("subtyping not handled");
 	}
 
-	if (SL.debugMode)
+	if (SymbolicInstructionFactory.debugMode) {
 	    System.out.println("GETFIELD: " + PC);
+	}
 
 	if (PC.isUnsat()) {
-	    if (SL.debugMode)
+	    if (SymbolicInstructionFactory.debugMode) {
 		System.out.println("GETFIELD: PC is not satisfiable; ignoring state.");
+	    }
 	    
 	    ti.getVM().getSystemState().setIgnored(true);
 	    return getNext(ti);

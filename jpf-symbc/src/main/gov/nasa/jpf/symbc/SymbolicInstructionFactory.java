@@ -735,7 +735,6 @@ public class SymbolicInstructionFactory extends gov.nasa.jpf.jvm.bytecode.Instru
         this.symArrays = conf.getBoolean("symbolic.arrays", false);
 	
 	this.seplogic = conf.getBoolean("symbolic.seplogic", false);
-	if (seplogic) gov.nasa.jpf.symbc.seplogic.SL.init(conf);
 	
 	/* load bitvector length, default to 32 */
 	bvlength = conf.getInt("symbolic.bvlength", 32);

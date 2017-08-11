@@ -66,9 +66,6 @@ import gov.nasa.jpf.symbc.heap.seplogic.Tree;
 import gov.nasa.jpf.symbc.heap.seplogic.Predicate;
 import gov.nasa.jpf.symbc.heap.seplogic.FullPredicate;
 
-import gov.nasa.jpf.symbc.seplogic.SL;
-import gov.nasa.jpf.symbc.seplogic.SeplogicPredicate;
-
 public class BytecodeUtils {
 
     //static boolean symClass = false;
