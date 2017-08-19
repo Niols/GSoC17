@@ -106,7 +106,10 @@ public class Node
 	return clonedNode;
     }
 
-    //FIXME: if done right, the object equality is enough.
+    // Note: we do not need this subtle equality, because the
+    // Union-Find has been writen carefully. Thus, the physical
+    // equality is enough (and, obviously, faster).
+    //
     // @Override
     // public boolean equals(Object other) {
     //     if (other instanceof Node)
@@ -248,8 +251,11 @@ public class Node
 	    throw new UnsatException("Cannot update field of a variable that is Nil.");
 
 	if (this.information == null) {
-	    //FIXME: what should we do here?
-	    System.err.println("I hope this never happens.");
+	    /* Whenever we have a PUTFIELD, the information cannot be
+	     * empty, if the symbolic engine has done its job
+	     * correctly. */
+	    System.err.println("This case should never happen.");
+	    System.exit(1);
 	    return;
 	}
 
@@ -262,8 +268,10 @@ public class Node
 	    return;
 	}
 
+	/* For the same reason, this case should never happen as long
+	 * as the symbolic engine is correct. */
 	System.err.println("This case is hard, I need unfolding.");
-	//FIXME: need unfolding
+	System.exit(1);
     }
 
     public Set<String> toStrings() {

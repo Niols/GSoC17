@@ -40,8 +40,7 @@ public class PathCondition
 	    staticConstraint.addPredicate(fullPredicate);
 	} catch (UnsatException e) {
 	    System.err.println("Inconsistent preconditions");
-	    //FIXME: here, we must kill SPF and complain that the
-	    //preconditions are not sat.
+	    System.exit(2);
 	}
     }
     

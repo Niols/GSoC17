@@ -96,14 +96,16 @@ public class Tree implements Predicate
 	}
 	else {
 	    System.out.println("I do not know how to handle two predicates on the same variable... so far.");
-	    //FIXME: We should accept the merge of two predicates
-	    //together, if possible (might be hard, actually... And
-	    //ask the user to specify that two variables are separated).
-	    //
-	    // In fact, that means that we want a way to have
-	    // separation or not in our structure. We'll have to think
-	    // about it.
-	    return null; //FIXME
+	    /* FIXME: that should not be too hard: we just keep all
+	     * the predicates. And whenever we need to unfold, we
+	     * unfold all of them. This might be a bit costly though,
+	     * but there will hopefully never be more than 2-3
+	     * predicates on a variable, and most cases will disapear
+	     * by themselves. For harder cases, one should write a new
+	     * predicate doing it efficiently. */
+
+	    System.exit(1);
+	    return null;
 	}
     }
 }

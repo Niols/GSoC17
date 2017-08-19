@@ -147,8 +147,8 @@ public class Helper {
     public static SymbolicInteger[] expressionArrayToSymbolicIntegerArray(Expression[] symbolicValues) {
 	SymbolicInteger[] symbolicIntegers = new SymbolicInteger[symbolicValues.length];
 
-	//FIXME: the fact that we assume that all expressions are
-	//symbolicIntegers will probably be annoying in the future.
+	/* FIXME: the fact that we assume that all expressions are
+	 * symbolicIntegers might be be annoying in the future. */
 
 	for (int i = 0; i < symbolicValues.length; i++)
 	    symbolicIntegers[i] = (SymbolicInteger) symbolicValues[i];
