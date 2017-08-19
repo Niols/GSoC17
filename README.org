@@ -6,7 +6,7 @@
 This is the repository for my contribution to Google's Summer of
 Code 2017.
 
-* Project description
+* Project Description
 - Link :: [[https://summerofcode.withgoogle.com/projects/#5306561080590336]]
 - Student :: Nicolas Jeannerod
 - Project Name :: Verification and Testing of Heap-based Programs with Symbolic PathFinder
@@ -30,13 +30,125 @@ over the heap. This would allow SPF to avoid a complete enumeration of
 all the possible cases, eliminating the ones violating the data
 structures properties. We want to focus in particular on separation
 logic and see if it brings an improvement compared to the lazy
-initialization or to languages like [[https://www.researchgate.net/publication/299907212_Symbolic_execution_of_programs_with_heap_inputs][HEX]].
+initialization.
 
-* Building
+* Building and running
+** With Docker
+The project contains a Dockerfile to create a complete environment for
+executing the tool and reproducing the results. Building the docker
+image and running it on an example can be done easely:
 #+BEGIN_SRC shell
 docker build -t gsoc .
-docker run gsoc jpf-symbc/src/examples/Assume.jpf
+docker run gsoc jpf-symbc/src/examples/seplogic/TestExtends.jpf
 #+END_SRC
+
+** Without Docker
+It is of course possible to build and run JPF/SPF locally. This will
+at least require the following dependencies to be installed:
+- Java,
+- Mercurial,
+- The [[https://ant.apache.org/][ANT]] tool,
+- The Z3 lib for Java,
+- Autoconf, Swig2, GMP, ANTLR3.
+
+On Debian, installing the following packages should be sufficient:
+- =openjdk-8-jdk-headless=, =openjdk-8-jre-headless=,
+- =libz3-java=,
+- =mercurial=,
+- =ant=,
+- =build-essential=, =autoconf=, =libtool=, =swig2.0=, =libgmp-dev=, =antlr3=, =libantlr3c-dev=, =libboost-dev=.
+
+* Trying it out on your own examples
+** The JPF file
+JPF/SPF runs on Java =.class= files and JPF-specific =.jpf= files
+containing the necessary configuration. Here is an example of a =.jpf=
+file:
+
+#+BEGIN_SRC jpf
+target = seplogic.TestNoncyclic
+
+classpath = ${jpf-symbc}/build/examples
+sourcepath = ${jpf-symbc}/src/examples
+type_classpath = ${jpf-symbc}/build/examples/seplogic
+
+symbolic.debug = true
+symbolic.seplogic = true
+search.multiple_errors = true
+
+symbolic.method = seplogic.TestNoncyclic.length_noncyclic(sym)
+symbolic.seplogic.precondition = seplogic.TestNoncyclic.length_noncyclic#0->Tree(next)
+
+search.depth_limit = 10
+#+END_SRC
+
+This configuration file is basically an extended key-value file (see
+the full description [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/config#SpecialPropertySyntax][here in JPF's documentation]]). Important generic
+options are:
+- =target= that points to the =.class= file we are interested in;
+- =symbolic.debug= that enables the debugging of SPF;
+- =search.multiple_errors= that tells JPF to keep going when
+  encountering an exception;
+- =search.depth_limit= that tells JPF to stop exploring after reaching a
+  certain depth. This is very important in the case of symbolic
+  execution of objects of potentially-unbounded depth (lists, trees);
+- =symbolic.method= that tells SPF which methods should have their
+  arguments considered symbolic. In that example, it is the method
+  =length_noncyclic= in the class =seplogic.TestNoncyclic=, that takes
+  only one argument that should be considered symbolic. A common
+  mistake is to think that this method will be the entry point of
+  JPF/SPF. This is not true: the entry point is the =main= method, as
+  usual in Java. However, whenever JPF will encounter the method
+  =length_noncyclic= and run it, SPF will start executing and do its
+  job.
+
+There are now options that are specific to this seplogic-augmented
+SPF:
+- =symbolic.seplogic= that enables the seplogic module, just like
+  =symbolic.lazy= would enable the lazy-initialiaztion module. Note that
+  =symbolic.seplogic= will take priority over =symbolic.lazy= if both are
+  set to true.
+- =symbolic.seplogic.precondition= that gives information about the
+  variables of the methods in =symbolic.method=. The syntax of the
+  preconditions is described hereafter.
+
+** The preconditions language
+The precondition language is quite limited. FIXME: actually, not
+everything in here is supported by SPF+SL.
+
+=symbolic.seplogic.precondition= is a comma-separated list of
+preconditions. These preconditions can be either:
+- an equality ~=~ (resp. a disequality ~!=~ or a separation ~*~) between two
+  variables;
+- an equality (resp. a disequality) between a variable and =nil=;
+- a unary predicate applied to a variable.
+
+The variables must be described by their absolute name composed of the
+name of the class followed by the name of the method and the number of
+the variable. Here is an example:
+#+BEGIN_SRC
+seplogic.TestNoncyclic . length_noncyclic # 0
+^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^   ^
+        class                 method        variable
+#+END_SRC
+
+
+* Future work
+- Be able to branch from the SL structure. That should allow an easier
+  handling of predicates. And even to support predicates that are not
+  supported for now, like:
+  #+BEGIN_SRC cyclist
+  BinTreeSeg {
+    x=y => BinTreeSeg(x,y) |
+    x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
+    x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
+  } ;
+  #+END_SRC
+  where we cannot know which branch to explore right away. To do this,
+  we will also have to support predicates that are not unary.
+
+- Carry enough information on the concrete nodes to have more precise
+  constraints. For now, the constraint looses a lot of precision each
+  time it have to handle a =PUTFIELD=.
 
 * Other links
 - [[file:doc/log-book.org][Log book]]
