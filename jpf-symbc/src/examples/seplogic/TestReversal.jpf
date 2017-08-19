@@ -1,0 +1,15 @@
+target = seplogic.TestReversal
+
+classpath = ${jpf-symbc}/build/examples
+sourcepath = ${jpf-symbc}/src/examples
+type_classpath = ${jpf-symbc}/build/examples/seplogic
+
+search.multiple_errors = true
+symbolic.seplogic = true
+symbolic.seplogic.debug = true
+symbolic.seplogic.backend = Cyclist
+
+symbolic.method = seplogic.TestReversal.reverse(sym)
+symbolic.seplogic.precondition = seplogic.TestReversal.reverse#0->Tree(next)
+
+search.depth_limit = 10
