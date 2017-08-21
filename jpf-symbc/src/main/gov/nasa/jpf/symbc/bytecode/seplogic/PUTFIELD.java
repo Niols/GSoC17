@@ -93,15 +93,7 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
 	    /* Update constraint to add:
              *
              *     objRefNode . fname -> opValNode
-             *
-	     * To do so, we have to find a record definition of
-	     * objRefNode. We can assume that there is an atom of the
-	     * form:
-             *
-             *     objRefNode -> {| ... ; fname = ? |}
-             *
-             * FIXME: is that true? we have to take care about
-             * aliases. */
+	     */
 
 	    /* Four cases:
 	     *
@@ -113,30 +105,22 @@ public class PUTFIELD extends gov.nasa.jpf.jvm.bytecode.PUTFIELD {
              *   that case, we have to update the PC.
              *
              * - objRef is concrete and opVal is symbolic. In that
-             *   case, we don't care?
+             *   case, we don't care, because we don't add any
+             *   information on objRef.
 	     *
 	     * - objRef in symbolic and opVal is concrete. In that
-	     *   case, we can add a fresh variable to fill in the
-	     *   blanks. However, by doing so, we loose information!
-	     *   We could at least try to detect when this value is
-	     *   Nil, because this is what happens most of the
-	     *   time. This will allow us to avoid loosing too much
-	     *   information.
-	     *
-	     * FIXME: is that valid? */
-
-	    // if (objRefNode != null && opValNode == null) {
-	    // 	System.out.println("objRefNode is symbolic, opValNode is concrete, opVal=" + opVal + ", NULL=" + MJIEnv.NULL);
-	    // }
+	     *   case, since we have no variable that represents the
+	     *   opVal, we take a fresh one. This might result in a
+	     *   loss of information. However, since what we are
+	     *   looking for is this unsatisfiability, this is still
+	     *   correct.
+	     */
 	    
 	    if (objRefNode != null) {
 		/* If objRef is symbolic, get a representation for
 		 * opVal (either opValNode is not null, or a fresh
 		 * one), and update the field in the PC. */
 
-		/* Since we are updating a field, we know that both
-		 * our variables are of type int. */
-		
 		PC.updateField(objRefNode, fname, (opValNode != null) ? opValNode : new SymbolicInteger());
 	    }
 
