@@ -39,6 +39,7 @@ package gov.nasa.jpf.symbc.heap.seplogic;
 
 /* Java imports */
 import java.util.Set;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 public class Tree implements Predicate
@@ -48,7 +49,14 @@ public class Tree implements Predicate
     public Tree(Set<String> fields) {
 	this.fields = fields;
     }
-	
+
+    public Tree(String[] fieldsArray) {
+	this.fields = new HashSet<String>();
+	for (String field : fieldsArray) {
+	    this.fields.add(field);
+	}
+    }
+    
     @Override
     public String toString() {
 	StringJoiner stringJoiner = new StringJoiner(", ");

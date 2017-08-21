@@ -300,36 +300,15 @@ public class BytecodeUtils {
 	    //				}
 	    //			}
 
-	    boolean seplogic = conf.getBoolean("symbolic.seplogic", false);
-
-	    /* Here, we read the preconditions in the configuration
-	     * and put them all in a map from String to
-	     * Set<SeplogicPredicate>. */
+	    /* Read the configuration, determine if the seplogic
+	     * module is to be activated. read the preconditions and
+	     * store them in the path condition. We cannot parse them
+	     * right away because we need to know the symbolic integer
+	     * that is behind the variable names (and we don't want an
+	     * intermediate representation just for that). */
 	    
-	    Map<String,Set<Predicate>> heapPreconditions = new HashMap<String,Set<Predicate>>();
-	    String[] stringPreconditions = conf.getStringArray("symbolic.seplogic.precondition");
-
-	    if (stringPreconditions != null) {
-		for (String precondition : stringPreconditions) {
-		    precondition = precondition.trim();
-
-		    String key = precondition.split("->", 2)[0];
-
-		    Set<Predicate> s = heapPreconditions.get(key);
-		    if (s == null) {
-			s = new HashSet<Predicate>();
-			heapPreconditions.put(key, s);
-		    }
-
-		    if (precondition.split("->", 2)[1].trim().equals("Tree(next)")) { //FIXME: hardcoded; beurk
-			Set<String> fields = new HashSet<String>();
-			fields.add("next");
-			s.add(new Tree(fields));
-		    } else {
-			System.err.println("Could not parse precondition: " + precondition);
-		    }
-		}
-	    }
+	    boolean seplogic = conf.getBoolean("symbolic.seplogic", false);
+	    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addPreconditions(conf.getStringArray("symbolic.seplogic.precondition"));
 	    
 	    for (int j = 0; j < argSize; j++) { // j ranges over actual arguments
 		if (symClass || args.get(j).equalsIgnoreCase("SYM")) {
@@ -503,12 +482,11 @@ public class BytecodeUtils {
 			    String fname = cname + '.' + mname.substring(0, mname.indexOf('('));
 			    String vname = fname + "#" + localVarsIdx;
 
-			    Set<Predicate> preconditions = heapPreconditions.get(vname);
-			    if (preconditions != null) {
-			    	for (Predicate predicate : preconditions) {
-			    	    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addStaticConstraint(new FullPredicate(sym_v, predicate));
-				}
-			    }
+			    /* Register the mapping [variable name] ->
+			     * [symbolic integer] in the static part
+			     * of the path conditions for the seplogic
+			     * module. */
+			    gov.nasa.jpf.symbc.heap.seplogic.PathCondition.addStaticVariable(vname, sym_v);
 			    
 			    expressionMap.put(name, sym_v);
 			    sf.setOperandAttr(stackIdx, sym_v);

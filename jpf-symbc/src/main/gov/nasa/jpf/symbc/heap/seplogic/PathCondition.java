@@ -19,6 +19,7 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,19 +30,131 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 public class PathCondition
 {
     /* Static part of the path condition */
-
+ 
+    private static Map<String,SymbolicInteger> staticVariables = null;
+    private static String[] preconditionStrings = null;
     private static Constraint staticConstraint = null;
 
-    public static void addStaticConstraint(FullPredicate fullPredicate) {
-	if (staticConstraint == null)
+    public static void addStaticVariable(String string, SymbolicInteger symint) {
+	if (staticVariables == null) {
+	    staticVariables = new HashMap<String,SymbolicInteger>();
+	}
+	staticVariables.put(string, symint);
+    }
+
+    public static void addPreconditions(String[] strings) {
+	preconditionStrings = strings;
+    }
+
+    private static SymbolicInteger getStaticVariable(String representation) {
+	SymbolicInteger variable = staticVariables.get(representation);
+	if (variable == null) {
+	    throw new ParseException("Unknown variable: " + representation);
+	} else {
+	    return variable;
+	}
+    }
+
+    private static String[] getPreconditionStrings() {
+	if (preconditionStrings == null) {
+	    return new String[0];
+	} else {
+	    return preconditionStrings;
+	}
+    }
+    
+    private static Constraint getStaticConstraint() {
+	if (staticConstraint == null) {
 	    staticConstraint = new Constraint();
 
-	try {
-	    staticConstraint.addPredicate(fullPredicate);
-	} catch (UnsatException e) {
-	    System.err.println("Inconsistent preconditions");
-	    System.exit(2);
+	    try {
+	    
+		for (String precondition : getPreconditionStrings()) {
+		    String trimedPrecondition = precondition.replaceAll("\\s", "");
+		    int index;
+
+		    /* Is this a separation? */
+		    index = trimedPrecondition.indexOf('*');
+		    if (index >= 0) {
+			String var1 = trimedPrecondition.substring(0, index);
+			String var2 = trimedPrecondition.substring(index+1);
+			//FIXME: for now all variables are separated. We
+			//have to find a way to change that, and upadte
+			//the parsing in consequence.
+
+			System.out.println("Separation between " + var1 + " and " + var2);
+		    
+			continue;
+		    }
+
+		    /* Is this a disequality? */
+		    index = trimedPrecondition.indexOf("!=");
+		    if (index >= 0) {
+			String var1 = trimedPrecondition.substring(0, index);
+			String var2 = trimedPrecondition.substring(index+2); //2
+
+			//FIXME:
+			System.out.println("Disequality between " + var1 + " and " + var2);
+		    
+			if (var1.toLowerCase().equals("nil")) {
+			    //FIXME
+			} else if (var2.toLowerCase().equals("nil")) {
+			    //FIXME
+			} else {
+			    staticConstraint.addNeq(getStaticVariable(var1), getStaticVariable(var2));
+			}
+		    
+			continue;
+		    }
+
+		    /* Is this an equality? */
+		    index = trimedPrecondition.indexOf('=');
+		    if (index >= 0) {
+			String var1 = trimedPrecondition.substring(0, index);
+			String var2 = trimedPrecondition.substring(index+1);
+		    
+			if (var1.toLowerCase().equals("nil")) {
+			    staticConstraint.addNil(getStaticVariable(var2));
+			} else if (var2.toLowerCase().equals("nil")) {
+			    staticConstraint.addNil(getStaticVariable(var1));
+			} else {
+			    staticConstraint.addEq(getStaticVariable(var1), getStaticVariable(var2));
+			}
+
+			continue;
+		    }
+
+		    /* Is this a predicate? */
+		    index = trimedPrecondition.indexOf("->");
+		    if (index >= 0) {
+			String var = trimedPrecondition.substring(0, index);
+			String pred = trimedPrecondition.substring(index+2); //2
+			
+			int indexParen = pred.indexOf('(');
+			String predName = pred.substring(0, indexParen).toLowerCase();
+			String[] arguments = pred.substring(indexParen+1,pred.length()-1).split(",");
+
+			if (predName.equals("tree")) {
+			    staticConstraint.addPredicate(getStaticVariable(var), new Tree(arguments));
+			} else {
+			    throw new ParseException("unknown predicate: " + predName);
+			}
+							
+			continue;
+		    }
+
+		    /* Error: could not parse. */
+		    throw new ParseException("could not parse: " + precondition);
+		}
+	    } catch(UnsatException e) {
+		throw new UnsatRuntimeException(e.getMessage());
+	    }
+
+	    if (SymbolicInstructionFactory.debugMode) {
+		System.out.println("Precondition is: " + staticConstraint.toString());
+	    }
 	}
+	return staticConstraint.clone();
     }
     
     /* Dynamic part */
@@ -55,7 +168,7 @@ public class PathCondition
     }
     
     public PathCondition() {
-	this((staticConstraint != null) ? staticConstraint.clone() : new Constraint(), false);
+	this(getStaticConstraint(), false);
     }
 
     /**

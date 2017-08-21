@@ -102,7 +102,8 @@ public class Constraint
 	return node;
     }
 
-    /** Returns a deep copy of the whole structure. FIXME: u sure m8? */
+    /** Returns a deep copy of the whole constraint constraint. Does
+     * not copy the SymbolicIntegers containened in the nodes. */
     public Constraint clone() {
 	Map<SymbolicInteger,Node> clonedNodes = new HashMap<SymbolicInteger,Node>();
 
@@ -149,10 +150,6 @@ public class Constraint
 
     public void addPredicate(SymbolicInteger variable, Predicate predicate) throws UnsatException {
 	getNode(variable).find().setInformation(predicate, false); //FIXME: false?
-    }
-
-    public void addPredicate(FullPredicate fullPredicate) throws UnsatException {
-	addPredicate(fullPredicate.getVariable(), fullPredicate.getPredicate());
     }
 
     /* Printer */
