@@ -45,7 +45,7 @@ import java.util.StringJoiner;
 /* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
-public class Record implements Information
+public class Record extends Information
 {
     private Map<String,Node> fields;
 
@@ -53,6 +53,11 @@ public class Record implements Information
 	this.fields = fields;
     }
 
+    @Override
+    public boolean isRecord() {
+	return true;
+    }
+    
     public boolean setField(String field, Node content) {
 	if (fields.containsKey(field)) {
 	    fields.put(field, content);
@@ -73,7 +78,7 @@ public class Record implements Information
     @Override
     public String toString() {
 	StringJoiner commaJoiner = new StringJoiner(" , ");
-
+	
 	for (Map.Entry<String,Node> entry : fields.entrySet())
 	    commaJoiner.add(entry.getKey() + " = " + entry.getValue().getVariable().hashCode());
 
@@ -83,11 +88,13 @@ public class Record implements Information
     public Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException {
 	if (other == null) {
 	    return this;
-	} else if (other instanceof Nil || other instanceof Record) {
+	} else if (other.isNil() || other.isRecord()) {
 	    throw new UnsatException();
-	} else {
+	} else if (other.isPredicate()) {
 	    Predicate otherAsPredicate = (Predicate) other;
 	    return otherAsPredicate.unifyPredicate(this, unifyRecordsWithPredicates);
+	} else {
+	    throw new UnsoundException();
 	}
     }
 }

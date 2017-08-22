@@ -42,7 +42,7 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.StringJoiner;
 
-public class Tree implements Predicate
+public class Tree extends Predicate
 {
     private final Set<String> fields;
 	
@@ -56,7 +56,7 @@ public class Tree implements Predicate
 	    this.fields.add(field);
 	}
     }
-    
+
     @Override
     public String toString() {
 	StringJoiner stringJoiner = new StringJoiner(", ");
@@ -74,10 +74,10 @@ public class Tree implements Predicate
 	
 	if (other == null) {
 	    return this;
-	} else if (other instanceof Nil) {
+	} else if (other.isNil()) {
 	    return other;
 	}
-	else if (other instanceof Record) {
+	else if (other.isRecord()) {
 	    //System.out.println("This is a record!");
 	    
 	    Record record = (Record) other;
@@ -102,7 +102,7 @@ public class Tree implements Predicate
 	    
 	    return record;
 	}
-	else {
+	else if (other.isPredicate()) {
 	    System.out.println("I do not know how to handle two predicates on the same variable... so far.");
 	    /* FIXME: that should not be too hard: we just keep all
 	     * the predicates. And whenever we need to unfold, we
@@ -114,6 +114,8 @@ public class Tree implements Predicate
 
 	    System.exit(1);
 	    return null;
+	} else {
+	    throw new UnsoundException();
 	}
     }
 }

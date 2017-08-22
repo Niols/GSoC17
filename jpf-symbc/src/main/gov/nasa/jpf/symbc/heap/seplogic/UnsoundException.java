@@ -37,12 +37,13 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
-public abstract class Predicate extends Information
+/** The UnsoundException is raised in parts of the Java code for heap
+ * constraint that should never be executed.  This is a runtime
+ * exception that will kill SPF.  When raised, it means that the tool
+ * reached an unexpected state, and is thus unsound. */
+
+public class UnsoundException extends RuntimeException
 {
-    @Override
-    public boolean isPredicate() {
-	return true;
-    }
-    
-    public abstract Information unifyPredicate(Information other, boolean unifyRecordsWithPredicates) throws UnsatException;
+    public UnsoundException() {}
+    public UnsoundException(String message) { super(message); }
 }

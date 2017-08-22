@@ -37,20 +37,31 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
-public class Nil implements Information {
+public class Nil extends Information
+{
+    public Nil() {
+    }
+
+    @Override
+    public boolean isNil() {
+	return true;
+    }
+    
     @Override
     public String toString() {
 	return "is nil";
     }
 
     public Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException {
-	if (other == null || other instanceof Nil) {
+	if (other == null || other.isNil()) {
 	    return this;
-	} else if (other instanceof Record) {
+	} else if (other.isRecord()) {
 	    throw new UnsatException();
-	} else {
+	} else if (other.isPredicate()) {
 	    Predicate otherAsPredicate = (Predicate) other;
 	    return otherAsPredicate.unifyPredicate(this, unifyRecordsWithPredicates);
+	} else {
+	    throw new UnsoundException();
 	}
     }
 }

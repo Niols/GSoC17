@@ -37,7 +37,19 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
-public interface Information {
+public abstract class Information
+{
+    public boolean isNil() {
+	return false;
+    }
+
+    public boolean isRecord() {
+	return false;
+    }
+
+    public boolean isPredicate() {
+	return false;
+    }
 
     /**
      * This function tries to come up with an information
@@ -67,5 +79,5 @@ public interface Information {
      *
      * FIXME: the case of predicates is quite surprising
      */
-    public Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException;
+    public abstract Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException;
 }
