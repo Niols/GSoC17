@@ -133,6 +133,25 @@ seplogic.TestNoncyclic . length_noncyclic # 0
 
 
 * Future work
+- Support the full precondition language defined in this README. This
+  implies rewriting the way informations work and are merged in order
+  to support:
+  - the merge of two records (records will only hold partial
+    information);
+  - the handling of several predicates for the same variable;
+  - a clever way of detecting non-separated variables (a variable is
+    non-separated with itself, we can also declare non-separated
+    variables, and all their sons through records are also
+    non-separated. This can be done by creating a "NonSeparation"
+    class. For each new separation, we create a new instance. We store
+    these instances in a field on each Node. The test of
+    non-separation becomes the test of non-empty intersection of these
+    sets).
+  - a nice handling of records/predicates. This requires the handling
+    of non-separated variables. The merging of two records is
+    possible, but only when non-separated. The merging with a
+    predicate is always possible.
+
 - Be able to branch from the SL structure. That should allow an easier
   handling of predicates. And even to support predicates that are not
   supported for now, like:
