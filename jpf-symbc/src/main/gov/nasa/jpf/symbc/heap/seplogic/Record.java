@@ -54,6 +54,11 @@ public class Record extends Information
 	this.fields = fields;
     }
 
+    /** Create a record with no information in it. */
+    public Record() {
+	this(new HashMap<String,Node>());
+    }
+    
     @Override
     public boolean isRecord() {
 	return true;
@@ -83,7 +88,7 @@ public class Record extends Information
     }
     
     @Override
-    public Information unify(Information other, boolean areSeparated) throws UnsatException {
+    public Information unify(Information other, Node node, boolean areSeparated) throws UnsatException {
 	if (other == null) {
 	    return this;
 	} else if (other.isNil()) {
@@ -105,10 +110,10 @@ public class Record extends Information
 			newNode.union(entry.getValue());
 		    }
 		}
-		return new Record(newFields); //FIXME: maybe we can update this one in place?
+		return new Record(newFields); //FIXME: maybe we can update this one in place? and change the clone
 	    }
 	} else if (other.isPredicate()) {
-	    return other.unify(this, areSeparated);
+	    return other.unify(this, node, areSeparated);
 	} else {
 	    throw new UnsoundException();
 	}

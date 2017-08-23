@@ -75,7 +75,7 @@ public class Tree extends Predicate
     }
     
     @Override
-    public Information unify(Information other, boolean areSeparated) throws UnsatException {
+    public Information unify(Information other, Node node, boolean areSeparated) throws UnsatException {
 	if (other == null) {
 	    return this;
 	}
@@ -91,9 +91,14 @@ public class Tree extends Predicate
 		 * fields too... Do it the other way around: iterate on
 		 * this.fields */
 
-		for (Map.Entry<String,Node> recordEntry : ((Record) other).getFields().entrySet()) {
-		    if (fields.contains(recordEntry.getKey())) {
-			recordEntry.getValue().addInformation(this);
+		Map<String,Node> recordFields = ((Record) other).getFields();
+
+		for (String field : this.fields) {
+		    Node recordNode = recordFields.get(field);
+		    if (recordNode == null) {
+			//FIXME: addField and a fresh node
+		    } else {
+			recordNode.addInformation(this);
 		    }
 		}
 		return other;

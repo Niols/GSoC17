@@ -131,7 +131,6 @@ seplogic.TestNoncyclic . length_noncyclic # 0
         class                 method        variable
 #+END_SRC
 
-
 * Future work
 - Support the full precondition language defined in this README. This
   implies rewriting the way informations work and are merged in order
@@ -163,8 +162,3 @@ seplogic.TestNoncyclic . length_noncyclic # 0
 - Carry enough information on the concrete nodes to have more precise
   constraints. For now, the constraint looses a lot of precision each
   time it have to handle a =PUTFIELD=.
-
-* Other links
-- [[file:doc/log-book.org][Log book]]
-- [[file:doc/provers.org][Provers]]
-- [[file:doc/classes.org][Notes on JPF/SPF's classes]]

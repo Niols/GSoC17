@@ -93,13 +93,10 @@ public class PathCondition
 			String var1 = trimedPrecondition.substring(0, index);
 			String var2 = trimedPrecondition.substring(index+2); //2
 
-			//FIXME:
-			System.out.println("Disequality between " + var1 + " and " + var2);
-		    
 			if (var1.toLowerCase().equals("nil")) {
-			    //FIXME
+			    staticConstraint.addNonNil(getStaticVariable(var2));
 			} else if (var2.toLowerCase().equals("nil")) {
-			    //FIXME
+			    staticConstraint.addNonNil(getStaticVariable(var1));
 			} else {
 			    staticConstraint.addNeq(getStaticVariable(var1), getStaticVariable(var2));
 			}

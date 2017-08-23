@@ -61,18 +61,19 @@ public class Nil extends Information
     }
 
     @Override
-    public Information unify(Information other, boolean areSeparated) throws UnsatException {
-	/* We don't care about 'areSeparated' as the fact to be 'nil'
+    public Information unify(Information other, Node node, boolean areSeparated) throws UnsatException {
+	/* We don't care about 'node' 'areSeparated' as the fact to be 'nil'
 	 * is a pure property. */
 	
 	if (other == null || other.isNil()) {
 	    return this;
 	}
 	else if (other.isRecord()) {
-	    throw new UnsatException();
+	    throw new UnsatException("Information: trying to unify 'nil' with a record"
+				     );
 	}
 	else if (other.isPredicate()) {
-	    return other.unify(this, areSeparated);
+	    return other.unify(this, node, areSeparated);
 	}
 	else {
 	    throw new UnsoundException();

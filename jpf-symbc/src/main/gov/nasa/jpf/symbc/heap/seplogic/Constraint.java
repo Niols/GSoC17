@@ -134,6 +134,10 @@ public class Constraint
 	getNode(e).find().addInformation(new Nil());
     }
 
+    public void addNonNil(SymbolicInteger e) throws UnsatException {
+	getNode(e).find().addInformation(new Record());
+    }
+
     public void addRecord(SymbolicInteger e, Map<String,SymbolicInteger> fields) throws UnsatException {
 
 	Map<String,Node> fieldsWithNodes = new HashMap<String,Node>();

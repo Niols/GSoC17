@@ -59,33 +59,50 @@ public class Several extends Predicate
 	this.predicates.add(pred1);
 	this.predicates.add(pred2);
     }
+
+    @Override
+    public Information clone() {
+	return new Several(new HashSet<Predicate>(this.predicates));
+    }
     
     @Override
     public String toString() {
-	return "FIXME";
+	StringJoiner commaJoiner = new StringJoiner(", ");
+	for(Predicate predicate : this.predicates) {
+	    commaJoiner.add(predicate.toString());
+	}
+	return "Several(" + commaJoiner.toString() + ")";
     }
 
     @Override
     public String toString(SymbolicInteger symint) {
-	return symint.hashCode() + " has may predicates";
+	return symint.hashCode() + " -> " + this.toString();
     }
+
+    // @Override
+    // public Set<String> toStrings(SymbolicInteger symint) {
+    // 	Set<String> repr = new HashSet<String>();
+    // 	for (Predicate predicate : this.predicates) {
+    // 	    repr.addAll(predicate.toStrings(symint));
+    // 	}
+    // 	return repr;
+    // }
     
     @Override
-    public Information unify(Information other, boolean areSeparated) throws UnsatException {
+    public Information unify(Information other, Node node, boolean areSeparated) throws UnsatException {
 	if (other == null) {
 	    return this;
 	}
 	else if (other.isNil() || other.isRecord()) {
 	    Information current = other;
 	    for (Predicate predicate : this.predicates) {
-		current = predicate.unify(current, areSeparated);
+		current = predicate.unify(current, node, areSeparated);
 	    }
 	    return current;
 	}
 	else if (other.isPredicate()) {
-	    Set<Predicate> newPredicates = new HashSet<Predicate>(this.predicates);
-	    newPredicates.add((Predicate) other);
-	    return new Several(newPredicates); //FIXME: update this on in place?
+	    this.predicates.add((Predicate) other);
+	    return this;
 	}
 	else {
 	    throw new UnsoundException();

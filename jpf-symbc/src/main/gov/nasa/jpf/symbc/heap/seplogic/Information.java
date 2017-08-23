@@ -37,6 +37,10 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
+import java.util.Set;
+import java.util.HashSet;
+
+/* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public abstract class Information
@@ -53,37 +57,25 @@ public abstract class Information
 	return false;
     }
 
-    public abstract String toString();
+    public Information clone() {
+	return this;
+    }
+
     public abstract String toString(SymbolicInteger symint);
 
+    public Set<String> toStrings(SymbolicInteger symint) {
+	Set<String> repr = new HashSet<String>();
+	repr.add(this.toString(symint));
+	return repr;
+    }
+
     /**
-     * This function tries to come up with an information
-     * consistent with the given and the current informations.
+     * This function tries to come up with the smallest information
+     * that is greater than the current one and the given one.
      *
-     * The following table presents the cases where we know for
-     * sure the information to deduce (filled in), the cases where
-     * we know for sure that this is unsatisfiable (crossed out),
-     * and the other cases that will require more subtle handling.
-     *
-     *            |         / |       Nil |    Record | Predicate  *
-     * -----------|-----------|-----------|-----------|----------- *
-     *          / |         / |       Nil |    Record | Predicate  *
-     * -----------|-----------|-----------|-----------|----------- *
-     *        Nil |       Nil |       Nil | \ \ \ \ \ |            *
-     * -----------|-----------|-----------|-----------|----------- *
-     *     Record |    Record | \ \ \ \ \ | \ \ \ \ \ |            *
-     * -----------|-----------|-----------|-----------|----------- *
-     *  Predicate | Predicate |           |           |            *
-     *
-     * Some of these cells might be surprising, as the one that
-     * states that the result of two records in unsatisfiable.
-     * This is because all the clauses represented by this
-     * structure are separated (because of the separation logic).
-     *
-     * However, the informations about being Nil or not are pure.
-     *
-     * FIXME: the case of predicates is quite surprising. Is that note
-     * up-to-date?
+     * It takes as argument an other information, the node that will
+     * receive the new information, and a boolean that is true whether
+     * this node is separated from the other one.
      */
-    public abstract Information unify(Information other, boolean areSeparated) throws UnsatException;
+    public abstract Information unify(Information other, Node node, boolean areSeparated) throws UnsatException;
 }

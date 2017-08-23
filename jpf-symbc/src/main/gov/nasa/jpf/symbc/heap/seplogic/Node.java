@@ -104,7 +104,9 @@ public class Node
 	    clonedFather = this.father.clone(clonedNodes);
 	}
 
-	Node clonedNode = new Node(this.variable, clonedForbidden, this.information, clonedFather, this.rank);
+	Node clonedNode = new Node(this.variable, clonedForbidden,
+				   ((this.information == null) ? null : this.information.clone()),
+				   clonedFather, this.rank);
 	clonedNodes.put(this.variable, clonedNode);
 	return clonedNode;
     }
@@ -238,7 +240,7 @@ public class Node
 	if (this.information == null) {
 	    this.information = otherInformation;
 	} else {
-	    this.information = this.information.unify(otherInformation, areSeparated);
+	    this.information = this.information.unify(otherInformation, this, areSeparated);
 	}
     }
 
