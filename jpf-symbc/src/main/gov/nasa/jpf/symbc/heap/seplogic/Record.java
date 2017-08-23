@@ -71,6 +71,11 @@ public class Record extends Information
     public Map<String,Node> getFields() {
 	return this.fields;
     }
+
+    @Override
+    public Record clone() {
+	return new Record(new HashMap<String,Node>(this.fields));
+    }
     
     @Override
     public String toString() {
@@ -101,16 +106,15 @@ public class Record extends Information
 		 * this one and we add all the others.  In case of
 		 * clash, we add the equality to the constraint. */
 		
-		Map<String,Node> newFields = new HashMap<String,Node>(this.fields);
-		for (Map.Entry<String,Node> entry : ((Record) other).getFields().entrySet()) {
-		    Node newNode = newFields.get(entry.getKey());
-		    if (newNode == null) {
-			newFields.put(entry.getKey(), entry.getValue());
+		for (Map.Entry<String,Node> otherEntry : ((Record) other).getFields().entrySet()) {
+		    Node thisNode = this.fields.get(otherEntry.getKey());
+		    if (thisNode == null) {
+			this.fields.put(otherEntry.getKey(), otherEntry.getValue());
 		    } else {
-			newNode.union(entry.getValue());
+			thisNode.union(otherEntry.getValue());
 		    }
 		}
-		return new Record(newFields); //FIXME: maybe we can update this one in place? and change the clone
+		return this;
 	    }
 	} else if (other.isPredicate()) {
 	    return other.unify(this, node, areSeparated);

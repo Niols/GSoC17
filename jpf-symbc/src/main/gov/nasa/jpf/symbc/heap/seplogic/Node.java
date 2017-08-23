@@ -35,9 +35,6 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-//FIXME: rename forbidden -> distinctNodes
-//FIXME: add unseparated (bridge?)
-
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 /* Java imports */
@@ -54,27 +51,30 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 public class Node
 {
     private SymbolicInteger variable;
-    private Set<Node> forbidden;
+    private Set<Node> distinctNodes;
     private Information information;
 
     private Node father;
     private int rank;
 
+    public final Constraint constraint;
+
     /** Carefull while using that, as it can break the structure's
      * consistency. */
-    public Node(SymbolicInteger variable, Set<Node> forbidden, Information information, Node father, int rank) {
+    public Node(Constraint constraint, SymbolicInteger variable, Set<Node> distinctNodes, Information information, Node father, int rank) {
+	this.constraint = constraint;
 	this.variable = variable;
-	this.forbidden = forbidden;
+	this.distinctNodes = distinctNodes;
 	this.information = information;
 	this.father = father;
 	this.rank = rank;
     }
 
-    public Node(SymbolicInteger variable) {
-	this(variable, new HashSet<Node>(), null, null, 0);
+    public Node(Constraint constraint, SymbolicInteger variable) {
+	this(constraint, variable, new HashSet<Node>(), null, null, 0);
     }
 
-    public Node clone(Map<SymbolicInteger,Node> clonedNodes) {
+    public Node clone(Constraint newConstraint, Map<SymbolicInteger,Node> clonedNodes) {
 	/* It is crucial that the same map is used by every node,
 	 * as they will update it! */
 
@@ -88,23 +88,24 @@ public class Node
 
 	/* For now on, we have not been cloned. Let us do this! */
 
-	Set<Node> clonedForbidden;
-	if (this.forbidden == null) {
-	    clonedForbidden = null;
+	Set<Node> clonedDistinctNodes;
+	if (this.distinctNodes == null) {
+	    clonedDistinctNodes = null;
 	} else {
-	    clonedForbidden = new HashSet<Node>();
-	    for (Node forbiddenNode : this.forbidden)
-		clonedForbidden.add(forbiddenNode.clone(clonedNodes));
+	    clonedDistinctNodes = new HashSet<Node>();
+	    for (Node distinctNode : this.distinctNodes) {
+		clonedDistinctNodes.add(distinctNode.clone(newConstraint, clonedNodes));
+	    }
 	}
 
 	Node clonedFather;
 	if (this.father == null) {
 	    clonedFather = null;
 	} else {
-	    clonedFather = this.father.clone(clonedNodes);
+	    clonedFather = this.father.clone(newConstraint, clonedNodes);
 	}
 
-	Node clonedNode = new Node(this.variable, clonedForbidden,
+	Node clonedNode = new Node(newConstraint, this.variable, clonedDistinctNodes,
 				   ((this.information == null) ? null : this.information.clone()),
 				   clonedFather, this.rank);
 	clonedNodes.put(this.variable, clonedNode);
@@ -154,15 +155,18 @@ public class Node
 	/* We first check that the other equivalence class is not
 	 * in the forbidden ones. */
 
-	for (Node forbiddenByThis : this.forbidden) {
-	    Node forbiddenAncestor = forbiddenByThis.find();
+	for (Node nodeDistinctFromOther : this.distinctNodes) {
+	    Node ancestorDistinctFromOther = nodeDistinctFromOther.find();
 
-	    if (otherAncestor.equals(forbiddenAncestor))
-		throw new UnsatException("Variable " + otherAncestor.getVariable() + " cannot be equal to " + forbiddenAncestor);
+	    if (otherAncestor.equals(ancestorDistinctFromOther)) {
+		throw new UnsatException("Variable " + otherAncestor.getVariable() + " cannot be equal to " + ancestorDistinctFromOther);
+	    }
 
-	    if (! forbiddenByThis.equals(forbiddenAncestor)) {
-		this.forbidden.remove(forbiddenByThis);
-		this.forbidden.add(forbiddenAncestor);
+	    if (! nodeDistinctFromOther.isAncestor()) {
+		/* Keep the set of distinct nodes as small as possible
+		 * by keeping only the ancestors. */
+		this.distinctNodes.remove(nodeDistinctFromOther);
+		this.distinctNodes.add(ancestorDistinctFromOther);
 	    }
 	}
 
@@ -170,13 +174,13 @@ public class Node
 	 * the two forbidden check. While doing so, we check that
 	 * the other ancestor accepts the merge too. */
 
-	for (Node forbiddenByOther : otherAncestor.getForbidden()) {
-	    Node forbiddenAncestor = forbiddenByOther.find();
+	for (Node nodeDistinctFromThis : otherAncestor.getDistinctNodes()) {
+	    Node ancestorDistinctFromThis = nodeDistinctFromThis.find();
 
-	    if (this.equals(forbiddenAncestor))
-		throw new UnsatException("Variable " + this.getVariable() + " cannot be equal to " + forbiddenAncestor);
+	    if (this.equals(ancestorDistinctFromThis))
+		throw new UnsatException("Variable " + this.getVariable() + " cannot be equal to " + ancestorDistinctFromThis);
 
-	    this.forbidden.add(forbiddenAncestor);
+	    this.distinctNodes.add(ancestorDistinctFromThis);
 	}
 
 	/* We update the information */
@@ -195,12 +199,16 @@ public class Node
     public void setFather(Node father, boolean clearFields) {
 	this.father = father;
 	if (clearFields) {
-	    this.forbidden.clear();
+	    this.distinctNodes.clear();
 	    this.information = null;
 	}
     }
 
     /* ********** Getters ********** */
+
+    public boolean isAncestor() {
+	return (this.father == null);
+    }
 
     public int getRank() {
 	return rank;
@@ -210,8 +218,8 @@ public class Node
 	return variable;
     }
 
-    public Set<Node> getForbidden() {
-	return new HashSet<Node>(forbidden);
+    public Set<Node> getDistinctNodes() {
+	return this.distinctNodes;
     }
 
     public Information getInformation() {
@@ -220,22 +228,20 @@ public class Node
 
     /* ********** Setters ********** */
 
-    public void addForbidden(Node other) {
-
+    public void addDistinctNode(Node other) {
 	/* Propagate this to ancestor. */
 	if (father != null) {
-	    find().addForbidden(other);
+	    find().addDistinctNode(other);
 	    return;
 	}
-
 	/* Add the other ancestor as a forbidden one for us. */
-	this.forbidden.add(other.find());
+	this.distinctNodes.add(other.find());
     }
 
     public void addInformation(Information otherInformation) throws UnsatException {
 	this.addInformation(otherInformation, false);
     }
-    
+
     private void addInformation(Information otherInformation, boolean areSeparated) throws UnsatException {
 	if (this.information == null) {
 	    this.information = otherInformation;
@@ -273,8 +279,8 @@ public class Node
 	    if (information != null)
 		repr.add(information.toString(this.variable));
 
-	    for (Node forbiddenNode : forbidden)
-		repr.add(variable.hashCode() + " != " + forbiddenNode.getVariable().hashCode());
+	    for (Node distinctNode : this.distinctNodes)
+		repr.add(variable.hashCode() + " != " + distinctNode.getVariable().hashCode());
 	} else {
 	    repr.add(variable.hashCode() + " = " + father.getVariable().hashCode());
 	}
