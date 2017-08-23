@@ -47,7 +47,31 @@ import java.util.StringJoiner;
 /* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
-/** This class represents a node in the Union-Find structure. */
+/**
+ * This class represents a node in the twicked Union-Find data
+ * structure.  It is used to carry a variable (i.e. a SymbolicInteger)
+ * and to store efficiently the set of nodes that are equal as well as
+ * their informations (that is, if they are nil, a record, if they
+ * have predicate talking about them...).
+ *
+ * This class is based on an efficiently written Union-Find structure,
+ * allowing a very fast test of equality between variables.  This is
+ * pretty important, as there are a lot of equal variables created by
+ * the constraints of SPF.
+ *
+ * It also carries a set of 'distinctNodes', that is a set of nodes
+ * that cannot be set equal to this one.  Whenever we call the 'union'
+ * of two nodes, we check that they do not appear in the other's
+ * 'distinctNode' set, allowing us to find clashes of disequality
+ * right away.
+ *
+ * Finally, it carries an 'Information', telling us what we know about
+ * the variable: is it equal to nil? to a record? do we have
+ * predicates talking about it?  Whenever we call the 'union'
+ * operation, their informations are merged.  This process detects
+ * clashes due, for instance, to a violation of the separation of a
+ * list.
+ */
 public class Node
 {
     private SymbolicInteger variable;
@@ -59,8 +83,10 @@ public class Node
 
     public final Constraint constraint;
 
-    /** Carefull while using that, as it can break the structure's
-     * consistency. */
+    /**
+     * Build a node from scratch. Careful while using that, as it can
+     * break the structure's consistency.
+     */
     public Node(Constraint constraint, SymbolicInteger variable, Set<Node> distinctNodes, Information information, Node father, int rank) {
 	this.constraint = constraint;
 	this.variable = variable;
@@ -70,10 +96,19 @@ public class Node
 	this.rank = rank;
     }
 
+    /**
+     * Build a node with absolutely no information except for the
+     * variable.
+     */
     public Node(Constraint constraint, SymbolicInteger variable) {
 	this(constraint, variable, new HashSet<Node>(), null, null, 0);
     }
 
+    /**
+     * Clone this node. This has to be done in a new environment: that
+     * is a new constraint, and a group of nodes that have already
+     * been cloned.  The 'clonedNodes' map is modified in * place.
+     */
     public Node clone(Constraint newConstraint, Map<SymbolicInteger,Node> clonedNodes) {
 	/* It is crucial that the same map is used by every node,
 	 * as they will update it! */
@@ -114,6 +149,11 @@ public class Node
 
     /* ********** Union-Find ********** */
 
+    /**
+     * The find operation of the Union-Find data structure: returns a
+     * node that is the representant of the equivalence class of the
+     * current node.
+     */
     public Node find() {
 	if (father == null) {
 	    return this;
@@ -125,9 +165,10 @@ public class Node
     }
 
 
-    /** The union function takes an other node and merge our
-     * equivalence class with theirs. */
-
+    /**
+     * The union operation of the Union-Find structure: takes an other
+     * node and merge the equivalence classes.
+     */
     public void union(Node other) throws UnsatException {
 	if (this.father != null) {
 	    this.find().union(other);
@@ -183,10 +224,9 @@ public class Node
 	    this.distinctNodes.add(ancestorDistinctFromThis);
 	}
 
-	/* We update the information */
+	/* We update the information. The 'true' boolean means that
+	 * the other node and this one are considered separated. */
 
-	//FIXME: for now, they are separated by default. This has to
-	//change.
 	this.addInformation(otherAncestor.getInformation(), true);
 
 	/* Finally, we tell to the other node that we are its
@@ -206,28 +246,50 @@ public class Node
 
     /* ********** Getters ********** */
 
+    /**
+     * Return true whether this node is the ancestor / the
+     * representant of its equivalence class (property of the
+     * Union-Find).
+     */
     public boolean isAncestor() {
 	return (this.father == null);
     }
 
+    /**
+     * Return the rank of this node (property of the Union-Find).
+     */
     public int getRank() {
 	return rank;
     }
 
+    /**
+     * Return the variable hold by this node.
+     */
     public SymbolicInteger getVariable() {
 	return variable;
     }
 
+    /**
+     * Return the set of nodes that cannot be set equal to this
+     * one.
+     */
     public Set<Node> getDistinctNodes() {
 	return this.distinctNodes;
     }
 
+    /**
+     * Return the information carried by this node.
+     */
     public Information getInformation() {
 	return information;
     }
 
     /* ********** Setters ********** */
 
+    /**
+     * Add a node to the set of nodes that cannot be set equal to this
+     * one.
+     */
     public void addDistinctNode(Node other) {
 	/* Propagate this to ancestor. */
 	if (father != null) {
@@ -238,10 +300,20 @@ public class Node
 	this.distinctNodes.add(other.find());
     }
 
+    /**
+     * Add the given information to this node.
+     */
     public void addInformation(Information otherInformation) throws UnsatException {
 	this.addInformation(otherInformation, false);
     }
 
+    /**
+     * Add the given information to this node.  If this node already
+     * possesses information, they have to be unified.  This process
+     * might raise 'UnsatException', and needs an other information:
+     * whether the node where the new information comes from is
+     * separated from this one.
+     */
     private void addInformation(Information otherInformation, boolean areSeparated) throws UnsatException {
 	if (this.information == null) {
 	    this.information = otherInformation;
@@ -250,7 +322,10 @@ public class Node
 	}
     }
 
-    //FIXME: doc
+    /**
+     * Update the constraint to reflect an update of the object
+     * represented by this node.
+     */
     public void updateField(String field, Node content) throws UnsatException {
 	if (this.information == null) {
 	    /* Whenever we have a PUTFIELD, the information cannot be
@@ -263,7 +338,6 @@ public class Node
 	    throw new UnsatException();
 	}
 	else if (this.information.isRecord()) {
-	    //FIXME: in place add? does the cloning clone informations too?
 	    ((Record) this.information).setField(field, content);
 	    return;
 	}
