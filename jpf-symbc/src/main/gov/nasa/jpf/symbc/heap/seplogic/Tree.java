@@ -91,15 +91,16 @@ public class Tree extends Predicate
 		 * fields too... Do it the other way around: iterate on
 		 * this.fields */
 
-		Map<String,Node> recordFields = ((Record) other).getFields();
+		Record record = (Record) other;
+		Map<String,Node> recordFields = record.getFields();
 
 		for (String field : this.fields) {
 		    Node recordNode = recordFields.get(field);
 		    if (recordNode == null) {
-			//FIXME: addField and a fresh node
-		    } else {
-			recordNode.addInformation(this);
+			recordNode = node.constraint.freshNode();
+			record.setField(field, recordNode);
 		    }
+		    recordNode.addInformation(this);
 		}
 		return other;
 	    }

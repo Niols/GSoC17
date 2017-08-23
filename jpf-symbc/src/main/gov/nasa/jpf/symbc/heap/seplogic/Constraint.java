@@ -81,7 +81,7 @@ import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class Constraint
 {
-    private final Map<SymbolicInteger,Node> nodes;
+    private Map<SymbolicInteger,Node> nodes;
 
     public Constraint(Map<SymbolicInteger,Node> nodes) {
 	this.nodes = nodes;
@@ -91,20 +91,27 @@ public class Constraint
 	this(new HashMap<SymbolicInteger,Node>());
     }
 
+    public void setNodes(Map<SymbolicInteger,Node> nodes) {
+	this.nodes = nodes;
+    }
+
     public Node getNode(SymbolicInteger e) {
 	Node node = nodes.get(e);
-
 	if (node == null) {
-	    node = new Node(e);
+	    node = new Node(this, e);
 	    nodes.put(e, node);
 	}
-
 	return node;
+    }
+
+    public Node freshNode() {
+	return this.getNode(new SymbolicInteger());
     }
 
     /** Returns a deep copy of the whole constraint constraint. Does
      * not copy the SymbolicIntegers containened in the nodes. */
     public Constraint clone() {
+	Constraint newConstraint = new Constraint();
 	Map<SymbolicInteger,Node> clonedNodes = new HashMap<SymbolicInteger,Node>();
 
 	for(Node node : nodes.values()) {
@@ -114,10 +121,10 @@ public class Constraint
 	     * nodes. To do so, they have to share a map together,
 	     * that they will update with themselves when they're done
 	     * cloning. */
-	    node.clone(clonedNodes);
+	    node.clone(newConstraint, clonedNodes);
 	}
-
-	return new Constraint(clonedNodes);
+	newConstraint.setNodes(clonedNodes);
+	return newConstraint;
     }
 
     /* Constraint adders. They can all throw UnsatException. */
@@ -127,7 +134,7 @@ public class Constraint
     }
 
     public void addNeq(SymbolicInteger e, SymbolicInteger f) throws UnsatException {
-	getNode(e).addForbidden(getNode(f));
+	getNode(e).addDistinctNode(getNode(f));
     }
 
     public void addNil(SymbolicInteger e) throws UnsatException {

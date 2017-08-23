@@ -112,19 +112,17 @@ SPF:
   preconditions is described hereafter.
 
 ** The preconditions language
-The precondition language is quite limited. FIXME: actually, not
-everything in here is supported by SPF+SL.
+The precondition language is quite limited.
 
 =symbolic.seplogic.precondition= is a comma-separated list of
 preconditions. These preconditions can be either:
-- an equality ~=~ (resp. a disequality ~!=~ or a separation ~*~) between two
-  variables;
-- an equality (resp. a disequality) between a variable and =nil=;
+- an equality ~=~ (resp. a disequality ~!=~) between two variables
+- an equality ~=~ (resp. a disequality ~!=~) between a variable and =nil=;
 - a unary predicate applied to a variable.
 
-The variables must be described by their absolute name composed of the
-name of the class followed by the name of the method and the number of
-the variable. Here is an example:
+All the variables are considered separated. They must be described by
+their absolute name composed of the name of the class followed by the
+name of the method and the number of the variable. Here is an example:
 #+BEGIN_SRC
 seplogic.TestNoncyclic . length_noncyclic # 0
 ^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^   ^
@@ -135,8 +133,6 @@ seplogic.TestNoncyclic . length_noncyclic # 0
 - Support the full precondition language defined in this README. This
   implies rewriting the way informations work and are merged in order
   to support:
-  - the merge of two records (records will only hold partial
-    information);
   - a clever way of detecting non-separated variables (a variable is
     non-separated with itself, we can also declare non-separated
     variables, and all their sons through records are also
