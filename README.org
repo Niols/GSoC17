@@ -138,7 +138,6 @@ seplogic.TestNoncyclic . length_noncyclic # 0
   to support:
   - the merge of two records (records will only hold partial
     information);
-  - the handling of several predicates for the same variable;
   - a clever way of detecting non-separated variables (a variable is
     non-separated with itself, we can also declare non-separated
     variables, and all their sons through records are also
@@ -147,10 +146,6 @@ seplogic.TestNoncyclic . length_noncyclic # 0
     these instances in a field on each Node. The test of
     non-separation becomes the test of non-empty intersection of these
     sets).
-  - a nice handling of records/predicates. This requires the handling
-    of non-separated variables. The merging of two records is
-    possible, but only when non-separated. The merging with a
-    predicate is always possible.
 
 - Be able to branch from the SL structure. That should allow an easier
   handling of predicates. And even to support predicates that are not
@@ -161,7 +156,7 @@ seplogic.TestNoncyclic . length_noncyclic # 0
     x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
     x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
   } ;
-  #+END_SRC
+#+END_SRC
   where we cannot know which branch to explore right away. To do this,
   we will also have to support predicates that are not unary.
 
