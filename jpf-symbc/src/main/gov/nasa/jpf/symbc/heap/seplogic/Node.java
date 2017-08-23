@@ -35,6 +35,9 @@
 //DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
+//FIXME: rename forbidden -> distinctNodes
+//FIXME: add unseparated (bridge?)
+
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 /* Java imports */
@@ -106,18 +109,6 @@ public class Node
 	return clonedNode;
     }
 
-    // Note: we do not need this subtle equality, because the
-    // Union-Find has been writen carefully. Thus, the physical
-    // equality is enough (and, obviously, faster).
-    //
-    // @Override
-    // public boolean equals(Object other) {
-    //     if (other instanceof Node)
-    // 	return getVariable().equals(other.getVariable());
-    //     else
-    // 	return false;
-    // }
-
     /* ********** Union-Find ********** */
 
     public Node find() {
@@ -188,7 +179,9 @@ public class Node
 
 	/* We update the information */
 
-	this.setInformation(otherAncestor.getInformation(), false);
+	//FIXME: for now, they are separated by default. This has to
+	//change.
+	this.addInformation(otherAncestor.getInformation(), true);
 
 	/* Finally, we tell to the other node that we are its
 	 * father now, and we add its rank to ours. */
@@ -201,7 +194,7 @@ public class Node
 	this.father = father;
 	if (clearFields) {
 	    this.forbidden.clear();
-	    /* this.information = null; */
+	    this.information = null;
 	}
     }
 
@@ -237,41 +230,38 @@ public class Node
 	this.forbidden.add(other.find());
     }
 
-    public void setInformation(Information otherInformation, boolean unifyRecordsWithPredicates) throws UnsatException {
+    public void addInformation(Information otherInformation) throws UnsatException {
+	this.addInformation(otherInformation, false);
+    }
+    
+    private void addInformation(Information otherInformation, boolean areSeparated) throws UnsatException {
 	if (this.information == null) {
 	    this.information = otherInformation;
 	} else {
-	    this.information = this.information.unify(otherInformation, unifyRecordsWithPredicates);
+	    this.information = this.information.unify(otherInformation, areSeparated);
 	}
     }
 
     //FIXME: doc
     public void updateField(String field, Node content) throws UnsatException {
-	if (this.information instanceof Nil)
-	    throw new UnsatException("Cannot update field of a variable that is Nil.");
-
 	if (this.information == null) {
 	    /* Whenever we have a PUTFIELD, the information cannot be
 	     * empty, if the symbolic engine has done its job
 	     * correctly. */
-	    System.err.println("This case should never happen.");
-	    System.exit(1);
+
+	    throw new UnsoundException();
+	}
+	else if (this.information.isNil()) {
+	    throw new UnsatException();
+	}
+	else if (this.information.isRecord()) {
+	    //FIXME: in place add? does the cloning clone informations too?
+	    ((Record) this.information).setField(field, content);
 	    return;
 	}
-
-	if (this.information instanceof Record) {
-	    Record thisRecord = (Record) this.information;
-
-	    if (! thisRecord.setField(field, content))
-		throw new UnsatException("Record " + thisRecord + " does not have a field '" + field + "'");
-
-	    return;
+	else {
+	    throw new UnsoundException();
 	}
-
-	/* For the same reason, this case should never happen as long
-	 * as the symbolic engine is correct. */
-	System.err.println("This case is hard, I need unfolding.");
-	System.exit(1);
     }
 
     public Set<String> toStrings() {
@@ -279,7 +269,7 @@ public class Node
 
 	if (father == null) {
 	    if (information != null)
-		repr.add(variable.hashCode() + " " + information.toString());
+		repr.add(information.toString(this.variable));
 
 	    for (Node forbiddenNode : forbidden)
 		repr.add(variable.hashCode() + " != " + forbiddenNode.getVariable().hashCode());

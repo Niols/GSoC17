@@ -37,6 +37,9 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
+/* SPF imports */
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+
 public class Nil extends Information
 {
     public Nil() {
@@ -49,18 +52,29 @@ public class Nil extends Information
     
     @Override
     public String toString() {
-	return "is nil";
+	return "nil";
     }
 
-    public Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException {
+    @Override
+    public String toString(SymbolicInteger symint) {
+	return symint.hashCode() + " = " + this.toString();
+    }
+
+    @Override
+    public Information unify(Information other, boolean areSeparated) throws UnsatException {
+	/* We don't care about 'areSeparated' as the fact to be 'nil'
+	 * is a pure property. */
+	
 	if (other == null || other.isNil()) {
 	    return this;
-	} else if (other.isRecord()) {
+	}
+	else if (other.isRecord()) {
 	    throw new UnsatException();
-	} else if (other.isPredicate()) {
-	    Predicate otherAsPredicate = (Predicate) other;
-	    return otherAsPredicate.unifyPredicate(this, unifyRecordsWithPredicates);
-	} else {
+	}
+	else if (other.isPredicate()) {
+	    return other.unify(this, areSeparated);
+	}
+	else {
 	    throw new UnsoundException();
 	}
     }

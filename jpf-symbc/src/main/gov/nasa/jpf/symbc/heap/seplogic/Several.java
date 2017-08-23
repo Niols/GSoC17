@@ -38,78 +38,56 @@
 package gov.nasa.jpf.symbc.heap.seplogic;
 
 /* Java imports */
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashSet;
 import java.util.StringJoiner;
 
 /* SPF imports */
 import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
-public class Record extends Information
+public class Several extends Predicate
 {
-    private Map<String,Node> fields;
+    private final Set<Predicate> predicates;
 
-    public Record(Map<String,Node> fields) {
-	this.fields = fields;
+    public Several(Set<Predicate> predicates) {
+	this.predicates = predicates;
     }
 
-    @Override
-    public boolean isRecord() {
-	return true;
-    }
-
-    public void setField(String field, Node content) {
-	this.fields.put(field, content);
-    }
-
-    public Map<String,Node> getFields() {
-	return this.fields;
+    public Several(Predicate pred1, Predicate pred2) {
+	this.predicates = new HashSet<Predicate>();
+	this.predicates.add(pred1);
+	this.predicates.add(pred2);
     }
     
     @Override
     public String toString() {
-	StringJoiner commaJoiner = new StringJoiner(" , ");
-	
-	for (Map.Entry<String,Node> entry : fields.entrySet())
-	    commaJoiner.add(entry.getKey() + " = " + entry.getValue().getVariable().hashCode());
-	
-	return "{| " + commaJoiner.toString() + " |}";
+	return "FIXME";
     }
 
     @Override
     public String toString(SymbolicInteger symint) {
-	return symint.hashCode() + " -> " + this.toString();
+	return symint.hashCode() + " has may predicates";
     }
     
     @Override
     public Information unify(Information other, boolean areSeparated) throws UnsatException {
 	if (other == null) {
 	    return this;
-	} else if (other.isNil()) {
-	    throw new UnsatException("Information: trying to unify a record with nil");
-	} else if (other.isRecord()) {
-	    if (areSeparated) {
-		throw new UnsatException("Information: trying to unify two records while separated");
-	    } else {
-		/* We merge the two records: we take all the fields of
-		 * this one and we add all the others.  In case of
-		 * clash, we add the equality to the constraint. */
-		
-		Map<String,Node> newFields = new HashMap<String,Node>(this.fields);
-		for (Map.Entry<String,Node> entry : ((Record) other).getFields().entrySet()) {
-		    Node newNode = newFields.get(entry.getKey());
-		    if (newNode == null) {
-			newFields.put(entry.getKey(), entry.getValue());
-		    } else {
-			newNode.union(entry.getValue());
-		    }
-		}
-		return new Record(newFields); //FIXME: maybe we can update this one in place?
+	}
+	else if (other.isNil() || other.isRecord()) {
+	    Information current = other;
+	    for (Predicate predicate : this.predicates) {
+		current = predicate.unify(current, areSeparated);
 	    }
-	} else if (other.isPredicate()) {
-	    return other.unify(this, areSeparated);
-	} else {
+	    return current;
+	}
+	else if (other.isPredicate()) {
+	    Set<Predicate> newPredicates = new HashSet<Predicate>(this.predicates);
+	    newPredicates.add((Predicate) other);
+	    return new Several(newPredicates); //FIXME: update this on in place?
+	}
+	else {
 	    throw new UnsoundException();
 	}
     }

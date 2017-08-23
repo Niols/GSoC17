@@ -131,7 +131,7 @@ public class Constraint
     }
 
     public void addNil(SymbolicInteger e) throws UnsatException {
-	getNode(e).find().setInformation(new Nil(), true);
+	getNode(e).find().addInformation(new Nil());
     }
 
     public void addRecord(SymbolicInteger e, Map<String,SymbolicInteger> fields) throws UnsatException {
@@ -141,7 +141,7 @@ public class Constraint
 	for (Map.Entry<String,SymbolicInteger> field : fields.entrySet())
 	    fieldsWithNodes.put(field.getKey(), getNode(field.getValue()));
 
-	getNode(e).find().setInformation(new Record(fieldsWithNodes), true);
+	getNode(e).find().addInformation(new Record(fieldsWithNodes));
     }
 
     public void updateField(SymbolicInteger variable, String field, SymbolicInteger content) throws UnsatException {
@@ -149,7 +149,7 @@ public class Constraint
     }
 
     public void addPredicate(SymbolicInteger variable, Predicate predicate) throws UnsatException {
-	getNode(variable).find().setInformation(predicate, false); //FIXME: false?
+	getNode(variable).find().addInformation(predicate);
     }
 
     /* Printer */

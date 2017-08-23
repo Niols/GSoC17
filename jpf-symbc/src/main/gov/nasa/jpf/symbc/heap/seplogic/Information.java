@@ -37,6 +37,8 @@
 
 package gov.nasa.jpf.symbc.heap.seplogic;
 
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
+
 public abstract class Information
 {
     public boolean isNil() {
@@ -50,6 +52,9 @@ public abstract class Information
     public boolean isPredicate() {
 	return false;
     }
+
+    public abstract String toString();
+    public abstract String toString(SymbolicInteger symint);
 
     /**
      * This function tries to come up with an information
@@ -77,7 +82,8 @@ public abstract class Information
      *
      * However, the informations about being Nil or not are pure.
      *
-     * FIXME: the case of predicates is quite surprising
+     * FIXME: the case of predicates is quite surprising. Is that note
+     * up-to-date?
      */
-    public abstract Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException;
+    public abstract Information unify(Information other, boolean areSeparated) throws UnsatException;
 }

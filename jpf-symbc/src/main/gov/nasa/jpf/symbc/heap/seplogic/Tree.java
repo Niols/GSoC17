@@ -39,8 +39,12 @@ package gov.nasa.jpf.symbc.heap.seplogic;
 
 /* Java imports */
 import java.util.Set;
+import java.util.Map;
 import java.util.HashSet;
 import java.util.StringJoiner;
+
+/* SPF imports */
+import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
 
 public class Tree extends Predicate
 {
@@ -62,59 +66,43 @@ public class Tree extends Predicate
 	StringJoiner stringJoiner = new StringJoiner(", ");
 	for (String field : fields)
 	    stringJoiner.add(field);
-	return "-> Tree(" + stringJoiner.toString() + ")";
+	return "Tree(" + stringJoiner.toString() + ")";
     }
 
-    public Information unify(Information other, boolean unifyRecordsWithPredicates) throws UnsatException {
-	return unifyPredicate(other, unifyRecordsWithPredicates);
+    @Override
+    public String toString(SymbolicInteger symint) {
+	return symint.hashCode() + " -> " + this.toString();
     }
-
-    public Information unifyPredicate(Information other, boolean unifyRecordsWithPredicates) throws UnsatException {
-	//System.out.println("Hello, I'm " + toString() + " and I'm trying to unify myself with " + other);
-	
+    
+    @Override
+    public Information unify(Information other, boolean areSeparated) throws UnsatException {
 	if (other == null) {
 	    return this;
-	} else if (other.isNil()) {
+	}
+	else if (other.isNil()) {
 	    return other;
 	}
 	else if (other.isRecord()) {
-	    //System.out.println("This is a record!");
-	    
-	    Record record = (Record) other;
+	    if (areSeparated) {
+		throw new UnsatException();
+	    } else {
+		/* Add this predicate to all the fields in the
+		 * record. FIXME: actually, we should add the missing
+		 * fields too... Do it the other way around: iterate on
+		 * this.fields */
 
-	    if (! unifyRecordsWithPredicates) {
-		throw new UnsatException("Tried to unify Record " + record.toString() + " with Predicate " + toString() + " while unifyRecordsWithPredicates is false.");
+		for (Map.Entry<String,Node> recordEntry : ((Record) other).getFields().entrySet()) {
+		    if (fields.contains(recordEntry.getKey())) {
+			recordEntry.getValue().addInformation(this);
+		    }
+		}
+		return other;
 	    }
-
-	    //System.out.println("I have the right to unify myself with it.");
-	    
-	    if (! record.getKeys().containsAll(this.fields)) {
-		throw new UnsatException("Tried to unify Record " + record.toString() + " with Predicate " + toString() + " when the predicate fields are not included in the records' ones.");
-	    }
-
-	    //System.out.println("Our keys are compatible");
-	    
-	    for (String field : fields) {
-		record.getField(field).setInformation(this, unifyRecordsWithPredicates);
-	    }
-
-	    //System.out.println("I shall return the record: " + record);
-	    
-	    return record;
 	}
 	else if (other.isPredicate()) {
-	    System.out.println("I do not know how to handle two predicates on the same variable... so far.");
-	    /* FIXME: that should not be too hard: we just keep all
-	     * the predicates. And whenever we need to unfold, we
-	     * unfold all of them. This might be a bit costly though,
-	     * but there will hopefully never be more than 2-3
-	     * predicates on a variable, and most cases will disapear
-	     * by themselves. For harder cases, one should write a new
-	     * predicate doing it efficiently. */
-
-	    System.exit(1);
-	    return null;
-	} else {
+	    return new Several(this, (Predicate) other);
+	}
+	else {
 	    throw new UnsoundException();
 	}
     }

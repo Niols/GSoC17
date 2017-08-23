@@ -43,6 +43,4 @@ public abstract class Predicate extends Information
     public boolean isPredicate() {
 	return true;
     }
-    
-    public abstract Information unifyPredicate(Information other, boolean unifyRecordsWithPredicates) throws UnsatException;
 }
