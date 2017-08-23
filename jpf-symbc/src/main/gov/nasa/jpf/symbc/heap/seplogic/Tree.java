@@ -86,10 +86,11 @@ public class Tree extends Predicate
 	    if (areSeparated) {
 		throw new UnsatException();
 	    } else {
-		/* Add this predicate to all the fields in the
-		 * record. FIXME: actually, we should add the missing
-		 * fields too... Do it the other way around: iterate on
-		 * this.fields */
+		/* Add this predicate to all the fields in the record.
+		 * We iterate on all the fields of this predicate.  If
+		 * they do not appear in the record, we add them.  In
+		 * any case, we add the Predicate information (this)
+		 * to the fields of the record. */
 
 		Record record = (Record) other;
 		Map<String,Node> recordFields = record.getFields();

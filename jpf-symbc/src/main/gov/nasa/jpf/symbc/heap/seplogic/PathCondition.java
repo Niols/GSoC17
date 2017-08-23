@@ -73,20 +73,6 @@ public class PathCondition
 		    String trimedPrecondition = precondition.replaceAll("\\s", "");
 		    int index;
 
-		    /* Is this a separation? */
-		    index = trimedPrecondition.indexOf('*');
-		    if (index >= 0) {
-			String var1 = trimedPrecondition.substring(0, index);
-			String var2 = trimedPrecondition.substring(index+1);
-			//FIXME: for now all variables are separated. We
-			//have to find a way to change that, and upadte
-			//the parsing in consequence.
-
-			System.out.println("Separation between " + var1 + " and " + var2);
-		    
-			continue;
-		    }
-
 		    /* Is this a disequality? */
 		    index = trimedPrecondition.indexOf("!=");
 		    if (index >= 0) {

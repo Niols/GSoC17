@@ -150,9 +150,9 @@ public class Helper {
 	/* FIXME: the fact that we assume that all expressions are
 	 * symbolicIntegers might be be annoying in the future. */
 
-	for (int i = 0; i < symbolicValues.length; i++)
+	for (int i = 0; i < symbolicValues.length; i++) {
 	    symbolicIntegers[i] = (SymbolicInteger) symbolicValues[i];
-
+	}
 	return symbolicIntegers;
     }
 
