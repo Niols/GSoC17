@@ -6,7 +6,7 @@
 This is the repository for my contribution to Google's Summer of
 Code 2017.
 
-* Project Description
+* Project description
 - Link :: [[https://summerofcode.withgoogle.com/projects/#5306561080590336]]
 - Student :: Nicolas Jeannerod
 - Project Name :: Verification and Testing of Heap-based Programs with Symbolic PathFinder
@@ -15,8 +15,9 @@ Code 2017.
   - Nikos Gorogiannis
   - Aymeric Fromherz
 
-Symbolic Pathfinder (SPF) is an open-source symbolic execution tool,
-based on the NASA Java Pathfinder (JPF) model checker, which is used
+** Abstract
+[[https://babelfish.arc.nasa.gov/trac/jpf/wiki/projects/jpf-symbc][Symbolic Pathfinder]] (SPF) is an open-source symbolic execution tool,
+based on the [[https://babelfish.arc.nasa.gov/trac/jpf][NASA Java Pathfinder]] (JPF) model checker, which is used
 in research and industry labs. It executes Java bytecode using a
 custom JVM to perform its analysis.
 
@@ -25,12 +26,15 @@ all heap objects that can bind to the structured inputs accessed by
 the program. This explicit enumeration may lead to a huge amount of
 false alarms.
 
-We propose to explore alternative ways of representing constraints
-over the heap. This would allow SPF to avoid a complete enumeration of
-all the possible cases, eliminating the ones violating the data
-structures properties. We want to focus in particular on separation
-logic and see if it brings an improvement compared to the lazy
-initialization.
+In this project, we tried to explore an alternative way of
+representing constraints over the heap. This would allow SPF to avoid
+a complete enumeration of all the possible cases, eliminating the ones
+violating the data structures properties. We focused in particular on
+separation logic and tried to determinie whether it would bring an
+improvement compared to the lazy initialization.
+
+This repository contains a separation logic-augmented SPF
+(SPF+SL). The extension will be detailed hereafter.
 
 * Building and running
 ** With Docker
@@ -44,26 +48,19 @@ docker run gsoc jpf-symbc/src/examples/seplogic/TestExtends.jpf
 
 ** Without Docker
 It is of course possible to build and run JPF/SPF locally. This will
-at least require the following dependencies to be installed:
-- Java,
-- Mercurial,
-- The [[https://ant.apache.org/][ANT]] tool,
-- The Z3 lib for Java,
-- Autoconf, Swig2, GMP, ANTLR3.
+at least require the following dependencies to be installed: Java,
+[[https://ant.apache.org/][ANT]], Autoconf, Swig2, GMP and ANTLR3.
 
 On Debian, installing the following packages should be sufficient:
-- =openjdk-8-jdk-headless=, =openjdk-8-jre-headless=,
-- =libz3-java=,
-- =mercurial=,
-- =ant=,
-- =build-essential=, =autoconf=, =libtool=, =swig2.0=, =libgmp-dev=, =antlr3=, =libantlr3c-dev=, =libboost-dev=.
+=openjdk-8-jdk-headless=, =openjdk-8-jre-headless=, =ant=, =build-essential=,
+=autoconf=, =libtool=, =swig2.0=, =libgmp-dev=, =antlr3=, =libantlr3c-dev=,
+=libboost-dev=.
 
 * Trying it out on your own examples
 ** The JPF file
 JPF/SPF runs on Java =.class= files and JPF-specific =.jpf= files
 containing the necessary configuration. Here is an example of a =.jpf=
 file:
-
 #+BEGIN_SRC jpf
 target = seplogic.TestNoncyclic
 
@@ -101,8 +98,7 @@ options are:
   =length_noncyclic= and run it, SPF will start executing and do its
   job.
 
-There are now options that are specific to this seplogic-augmented
-SPF:
+There are now options that are specific to SPF+SL:
 - =symbolic.seplogic= that enables the seplogic module, just like
   =symbolic.lazy= would enable the lazy-initialiaztion module. Note that
   =symbolic.seplogic= will take priority over =symbolic.lazy= if both are
@@ -112,9 +108,8 @@ SPF:
   preconditions is described hereafter.
 
 ** The preconditions language
-The precondition language is quite limited.
-
-=symbolic.seplogic.precondition= is a comma-separated list of
+The precondition language is quite
+limited. =symbolic.seplogic.precondition= is a comma-separated list of
 preconditions. These preconditions can be either:
 - an equality ~=~ (resp. a disequality ~!=~) between two variables
 - an equality ~=~ (resp. a disequality ~!=~) between a variable and =nil=;
@@ -128,6 +123,83 @@ seplogic.TestNoncyclic . length_noncyclic # 0
 ^^^^^^^^^^^^^^^^^^^^^^   ^^^^^^^^^^^^^^^^   ^
         class                 method        variable
 #+END_SRC
+
+The only predicate/s available at the moment is/are "tree". This
+predicate can be indexed by a set of strings. For instance:
+#+BEGIN_SRC
+ClassName.methodName#3 -> Tree(right,left)
+#+END_SRC
+specifies that the fourth variable of =methodName= in =className= is
+either =null= or points to an object with at least two fields, =right= and
+=left=, which are themselves =Tree(right,left)=. In particular, =Tree(next)=
+would represent a linked list.
+
+There is no way to define a new predicate through the precondition
+language. However, it is quite easy to add them to SPF+SL. For now,
+the predicates can only be unary, and can not involve a branching of
+the tool. For instance, a predicate like the following (in [[http://www.cyclist-prover.org/][Cyclist]]'s
+syntax) cannot be implemented:
+#+BEGIN_SRC cyclist
+BinTreeSeg {
+  x=y => BinTreeSeg(x,y) |
+  x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
+  x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
+} ;
+#+END_SRC
+
+* How it works
+** The idea
+The base idea is to overload the JVM's instructions that talk about
+the heap, and to use them to keep a constraint talking about the state
+of the heap up-to-date. Each branch of the symbolic execution gets its
+own constraint. Every once in a while, these constraints are be sent
+to a prover and checked for unsatisfiability. All the branches
+corresponding to an unsatisfiable contraint are then killed, avoiding
+to spend time in branches that have no real meaning.
+
+By default, the constraints built by SPF+SL are always satisfiable
+because they represent states of the memory that are built using the
+JVM's instructions. This is only in the presence of preconditions that
+we can start killing branches. These preconditions have to be provided
+by the user.
+
+The first goal was to have a modulable interface on which we could
+plug any prover. We showed that it was possible against both CVC4 and
+[[http://www.cyclist-prover.org/][Cyclist]]. However, we encountered two major difficulties, coming from
+two features unsupported by most separation logic provers:
+
+- non-separating clauses -- that is, the logical "and" --; that means
+  that we have to handle the unfolding of the predicates by
+  ourselves. Indeed, when we have both =x -> {| ... |}= and =x -> A=, for
+  instance:
+  - we can't write =x -> {| ... |} ∧ x -> A= as provers do not support
+    that,
+  - we can't write =x -> {| ... |} * x -> A= as the separation would
+    make this constraint unsatisfiable, although this is not the case.
+
+- record update; that means that we have to handle the update of a
+  constraint ourselves.
+
+Having to handle the two by ourselves led to the creation of a more
+subtle data-structure that would make efficient these two
+operations. These structure was basically a union-find structure (for
+an efficient handling of aliases) where the representant of each
+equivalence class would carry the information/s that we have on it.
+
+In fact, once this structure exists, there is not much to add to
+obtain a full separation logic prover. In addition, keeping the prover
+inside SPF had a few other advantages:
+- this does not require the aditionnal translation step nor the
+  spawning of an external process;
+- the symbolic engine already takes care of a part of what we need,
+  making the SL-prover much easier to write;
+- and the check for unsatisfiability can be checked incrementally
+  while we update the structure, allowing an important speedup.
+
+For this reason, we decided to forget about sending the constraints to
+external provers and to have it in SPF.
+
+** In practise
 
 * Future work
 - Support the full precondition language defined in this README. This
@@ -144,16 +216,9 @@ seplogic.TestNoncyclic . length_noncyclic # 0
 
 - Be able to branch from the SL structure. That should allow an easier
   handling of predicates. And even to support predicates that are not
-  supported for now, like:
-  #+BEGIN_SRC cyclist
-  BinTreeSeg {
-    x=y => BinTreeSeg(x,y) |
-    x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
-    x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
-  } ;
-#+END_SRC
-  where we cannot know which branch to explore right away. To do this,
-  we will also have to support predicates that are not unary.
+  supported for now where we cannot know which branch to explore right
+  away. To do this, we will also have to support predicates that are
+  not unary.
 
 - Carry enough information on the concrete nodes to have more precise
   constraints. For now, the constraint looses a lot of precision each
