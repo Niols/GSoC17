@@ -4,11 +4,8 @@ MAINTAINER Nicolas `Niols` Jeannerod <niols@niols.fr>
 
 ## Update (DO NOT upgrade) and install necessary packages.
 RUN apt-get update && apt-get install -y \
-        openjdk-8-jdk-headless openjdk-8-jre-headless \
- 	libz3-java \
- 	mercurial ant \
-	build-essential autoconf libtool swig2.0 libgmp-dev antlr3 libantlr3c-dev libboost-dev \
-	valgrind
+        openjdk-8-jdk-headless openjdk-8-jre-headless ant \
+	build-essential autoconf libtool swig2.0 libgmp-dev antlr3 libantlr3c-dev libboost-dev
 
 COPY .jpf /root
 
