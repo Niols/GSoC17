@@ -16,6 +16,7 @@ Code 2017.
   - Aymeric Fromherz
 
 ** Abstract
+
 [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/projects/jpf-symbc][Symbolic Pathfinder]] (SPF) is an open-source symbolic execution tool,
 based on the [[https://babelfish.arc.nasa.gov/trac/jpf][NASA Java Pathfinder]] (JPF) model checker, which is used
 in research and industry labs. It executes Java bytecode using a
@@ -38,6 +39,7 @@ This repository contains a separation logic-augmented SPF
 
 * Building and running
 ** With Docker
+
 The project contains a Dockerfile to create a complete environment for
 executing the tool and reproducing the results. Building the docker
 image and running it on an example can be done easely:
@@ -47,6 +49,7 @@ docker run gsoc jpf-symbc/src/examples/seplogic/TestExtends.jpf
 #+END_SRC
 
 ** Without Docker
+
 It is of course possible to build and run JPF/SPF locally. This will
 at least require the following dependencies to be installed: Java,
 [[https://ant.apache.org/][ANT]], Autoconf, Swig2, GMP and ANTLR3.
@@ -58,6 +61,7 @@ On Debian, installing the following packages should be sufficient:
 
 * Trying it out on your own examples
 ** The JPF file
+
 JPF/SPF runs on Java =.class= files and JPF-specific =.jpf= files
 containing the necessary configuration. Here is an example of a =.jpf=
 file:
@@ -149,6 +153,7 @@ BinTreeSeg {
 
 * How it works
 ** The idea
+
 The base idea is to overload the JVM's instructions that talk about
 the heap, and to use them to keep a constraint talking about the state
 of the heap up-to-date. Each branch of the symbolic execution gets its
@@ -201,25 +206,131 @@ external provers and to have it in SPF.
 
 ** In practise
 
+The tool that is present in this repository is a modification of SPF
+in which:
+- some symbolic JVM instructions have been override (see
+  =bytecode/seplogic= the =SymbolicInstructionFactory= as well as
+  =heap/seplogic/Helper=),
+- specific =HeapChoiceGenerator= and =PathCondition= have been written (in
+  =heap/seplogic=),
+- and more importantly, a constraint structure has been implemented
+  (in =heap/seplogic/constraint=).
+
+This constraint structure is basically an efficiently-written
+union-find structure on =SymbolicInteger= (think of it as the variables
+in SPF). It also carries an information for each equivalence class
+that can be:
+- that they are =nil=,
+- that they point to a record, and the fields of the records
+  (represented as other nodes of the structure directly, for the sake
+  of efficiency),
+- that there is (or are) a predicate that gives us information about
+  them.
+
+All the operations that this structure allows of this structure may
+raise an =UnsatException=. They are:
+
+- the =find= operation of the union-find that takes a node and return
+  the node representing its equivalence class. This can allow to test
+  the equality of two nodes, but this is not the case here. However,
+  it allows to find the representant, which is the one carrying the
+  important informations.
+
+- the =union= operation of the union-find that takes two nodes and
+  merges their equivalence classes. This corresponds to adding an
+  equality between two variables. This merging operation also checks
+  that the merging is allowing -- that is, that there is no
+  disequality about those two equivalence classes. Finally, it also
+  merges the informations carried by the nodes, which is where
+  everything subtle happens.
+
+- the adding of some information about a node. This also triggers a
+  merge of this information with the informations that are already
+  there.
+
+- the update of the information of a record. This is much easier than
+  in a standard SL prover. In a standard SL prover, there is a phase
+  of rearrangment that makes sure that this field update will make
+  sense (that is, there is indeed a record onto which this variable
+  points containing the right field). In our case, and since we are
+  working with a symbolic engine that already has to find that out,
+  there is no need.
+
+*** The merging of informations
+
+The merging of two informations is where we really check the
+unsatisfiability of a formula. Some things are trivial to merge (=nil=
+with =nil= is =nil=, =nil= with a record is unsatisfiable, ...) and some are
+more difficult.
+
+For instance, merging two records is something quite important. We
+build a record whose fields will be the union of the fields of the two
+records to merge. Whenever a field is present in both the records, we
+trigger a =union= of the nodes they contain, which may eventually lead
+to an =UnsatException=.
+
+Everything becomes more subtle as soon as there are predicates. The
+merging of two predicates is quite harmless: we keep them
+both. However, as soon as we know something else about the node, we
+need to unfold the predicate/s, and see which branch of the unfolding
+makes sense. For now, there may be only one.
+
+In the code, all these "informations" extend the abstract class
+=heap/seplogic/Information=. The predicates extend the abstract class
+=heap/seplogic/Predicate= (which is, itself, extending
+=Information=). They have to provide a =unify= function that takes the
+other information and deals with the merge.
+
+When unifying a predicate with an other information, the only
+important cases are the case of =nil= and the case of a record, which
+makes predicates kind of easy to write.
+
+*** Efficiency
+
+The union-find structure has been writen in an efficient way. There is
+however some room of improvement on the disequality test. We believe
+that the main bottleneck comes from the fact that, each time SPF
+branches (which happens quite a lot), we have to copy the whole
+structure. It would be much efficient to work with persistent data
+structures.
+
+Nevertheless, the tool seems quite efficient: given the right
+preconditions, it can kill a lot of branches. The overhead it involves
+in time is very little (actually, it is even much better than the
+usual prover's overhead, which may be explained by the incrementality
+of our prover and the fact that we don't need to translate the whole
+constraint every time).
+
+We attempted to run benchmarks on SPF vs. SPF+SL to highlight those
+facts. These benchmarks can be reproduced by simply running the
+=benchmarks= script in the root of the repository. There are two
+benchmarks only right now. The first one compares the SPF against
+SPF+SL with preconditions, to show that killing branches does save a
+lot of time. The second one compares SPF and SPF+SL but makes sure
+that the same branches are killed in both cases. It aims at showing
+that, even when killing branches does not make a difference, we save a
+lot of time just because of the implementation that is incremental and
+without external solver.
+
 * Future work
-- Support the full precondition language defined in this README. This
-  implies rewriting the way informations work and are merged in order
-  to support:
-  - a clever way of detecting non-separated variables (a variable is
-    non-separated with itself, we can also declare non-separated
-    variables, and all their sons through records are also
-    non-separated. This can be done by creating a "NonSeparation"
-    class. For each new separation, we create a new instance. We store
-    these instances in a field on each Node. The test of
-    non-separation becomes the test of non-empty intersection of these
-    sets).
 
-- Be able to branch from the SL structure. That should allow an easier
-  handling of predicates. And even to support predicates that are not
-  supported for now where we cannot know which branch to explore right
-  away. To do this, we will also have to support predicates that are
-  not unary.
+Although the tool seems quite efficient as it is, there is still a lot
+of room for improvement. In particular:
 
-- Carry enough information on the concrete nodes to have more precise
-  constraints. For now, the constraint looses a lot of precision each
-  time it have to handle a =PUTFIELD=.
+- It would be nice to have a way to support non-separated variable, as
+  it is sometimes wanted. 
+
+- We would like to make SPF branch from the SL structure. That would
+  allow the predicates to be written in an easier way (and maybe even
+  read from the preconditions), and to support predicates where we do
+  not know which branch to choose.
+
+- We would like to support non-unary predicates, like the
+  segments. This goes with the support of branching in SPF, as most of
+  the natural branching predicates are not unary.
+
+- We would like SPF to carry enough information on the concrete nodes
+  to have more precise constraints. For now, the constraint looses a
+  lot of precision each time it have to handle a =PUTFIELD=, as we
+  cannot determine what has been put in the field (and we can only
+  create a fresh variable).
