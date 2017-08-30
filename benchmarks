@@ -5,8 +5,62 @@ printf 'Building docker image...\n'
 docker build -t gsoc .
 printf 'Build finished.\n\n'
 
+################################################################################
+################################  Benchmark 1  #################################
+################################################################################
+
 cat <<EOF
+
+
 Benchmark 1
+-----------
+
+In this benchmark, we compute the length of an object that is a
+list. This is meant to highlight the time saved by killing benches.
+
+                 |       Lazy        |            Seplogic               |
+                 |-------------------|-----------------------------------|
+| Depth | States |   Time   | Memory |   Time   | Memory | Pruned states |
+|-------|--------|----------|--------|----------|--------|---------------|
+EOF
+
+for depth in $(seq 5 5 50)
+do
+    printf '| %5d |' "$depth"
+    
+    for lazy in true false
+    do
+	$lazy && seplogic=false || seplogic=true
+
+	output=$(docker run gsoc jpf-symbc/src/examples/seplogic/TestLength.jpf \
+			+symbolic.debug=false +symbolic.seplogic.debug=false \
+			+symbolic.lazy=$lazy +symbolic.seplogic=$seplogic \
+			+search.depth_limit=$depth \
+			2>/dev/null \
+		     | tail -n 60)
+
+      	time=$(printf -- "$output" | sed -n 's/^elapsed time:[ \t]*\(..:..:..\)/\1/p')
+	states=$(printf -- "$output" | sed -n 's/states:.*new=\(.[^,]*\),.*/\1/p')
+	pruned=$(printf -- "$output" | sed -n 's/states:.*ignored=\(.[^,]*\).*/\1/p')
+	memory=$(printf -- "$output" | sed -n 's/max memory:[^0-9]*\([0-9].*\)/\1/p')
+
+	if $lazy
+	then
+	    printf ' %6d | %s | %6s |' "$states" "$time" "$memory"
+	else
+	    printf ' %s | %6s | %6d (%3d%%) |\n' "$time" "$memory" "$pruned" "$((100 * pruned / states))"
+	fi
+    done
+done
+
+################################################################################
+################################  Benchmark 2  #################################
+################################################################################
+
+cat <<EOF
+
+
+Benchmark 2
 -----------
 
 In this benchmark, we compute the length of an object that is a
