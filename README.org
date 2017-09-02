@@ -31,7 +31,7 @@ In this project, we tried to explore an alternative way of
 representing constraints over the heap. This would allow SPF to avoid
 a complete enumeration of all the possible cases, eliminating the ones
 violating the data structures properties. We focused in particular on
-separation logic and tried to determinie whether it would bring an
+separation logic and tried to determine whether it would bring an
 improvement compared to the lazy initialization.
 
 This repository contains a separation logic-augmented SPF
@@ -42,7 +42,7 @@ This repository contains a separation logic-augmented SPF
 
 The project contains a Dockerfile to create a complete environment for
 executing the tool and reproducing the results. Building the docker
-image and running it on an example can be done easely:
+image and running it on an example can be done easily:
 #+BEGIN_SRC shell
 docker build -t gsoc .
 docker run gsoc jpf-symbc/src/examples/seplogic/TestExtends.jpf
@@ -104,7 +104,7 @@ options are:
 
 There are now options that are specific to SPF+SL:
 - =symbolic.seplogic= that enables the seplogic module, just like
-  =symbolic.lazy= would enable the lazy-initialiaztion module. Note that
+  =symbolic.lazy= would enable the lazy-initialization module. Note that
   =symbolic.seplogic= will take priority over =symbolic.lazy= if both are
   set to true.
 - =symbolic.seplogic.precondition= that gives information about the
@@ -159,8 +159,8 @@ the heap, and to use them to keep a constraint talking about the state
 of the heap up-to-date. Each branch of the symbolic execution gets its
 own constraint. Every once in a while, these constraints are be sent
 to a prover and checked for unsatisfiability. All the branches
-corresponding to an unsatisfiable contraint are then killed, avoiding
-to spend time in branches that have no real meaning.
+corresponding to an unsatisfiable constraint are then killed, avoiding
+to spend time in branches that actually unreachable.
 
 By default, the constraints built by SPF+SL are always satisfiable
 because they represent states of the memory that are built using the
@@ -168,8 +168,8 @@ JVM's instructions. This is only in the presence of preconditions that
 we can start killing branches. These preconditions have to be provided
 by the user.
 
-The first goal was to have a modulable interface on which we could
-plug any prover. We showed that it was possible against both CVC4 and
+The first goal was to have a modular interface on which we could plug
+any prover. We showed that it was possible against both CVC4 and
 [[http://www.cyclist-prover.org/][Cyclist]]. However, we encountered two major difficulties, coming from
 two features unsupported by most separation logic provers:
 
@@ -194,7 +194,7 @@ equivalence class would carry the information/s that we have on it.
 In fact, once this structure exists, there is not much to add to
 obtain a full separation logic prover. In addition, keeping the prover
 inside SPF had a few other advantages:
-- this does not require the aditionnal translation step nor the
+- this does not require the additional translation step nor the
   spawning of an external process;
 - the symbolic engine already takes care of a part of what we need,
   making the SL-prover much easier to write;
@@ -234,7 +234,7 @@ raise an =UnsatException=. They are:
   the node representing its equivalence class. This can allow to test
   the equality of two nodes, but this is not the case here. However,
   it allows to find the representant, which is the one carrying the
-  important informations.
+  important information.
 
 - the =union= operation of the union-find that takes two nodes and
   merges their equivalence classes. This corresponds to adding an
@@ -245,12 +245,12 @@ raise an =UnsatException=. They are:
   everything subtle happens.
 
 - the adding of some information about a node. This also triggers a
-  merge of this information with the informations that are already
+  merge of this information with the information that are already
   there.
 
 - the update of the information of a record. This is much easier than
   in a standard SL prover. In a standard SL prover, there is a phase
-  of rearrangment that makes sure that this field update will make
+  of rearrangement that makes sure that this field update will make
   sense (that is, there is indeed a record onto which this variable
   points containing the right field). In our case, and since we are
   working with a symbolic engine that already has to find that out,
@@ -287,7 +287,7 @@ makes predicates kind of easy to write.
 
 *** Efficiency
 
-The union-find structure has been writen in an efficient way. There is
+The union-find structure has been written in an efficient way. There is
 however some room of improvement on the disequality test. We believe
 that the main bottleneck comes from the fact that, each time SPF
 branches (which happens quite a lot), we have to copy the whole
@@ -297,7 +297,7 @@ structures.
 Nevertheless, the tool seems quite efficient: given the right
 preconditions, it can kill a lot of branches. The overhead it involves
 in time is very little (actually, it is even much better than the
-usual prover's overhead, which may be explained by the incrementality
+usual prover's overhead, which may be explained by the incrementallity
 of our prover and the fact that we don't need to translate the whole
 constraint every time).
 
