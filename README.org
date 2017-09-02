@@ -24,8 +24,9 @@ custom JVM to perform its analysis.
 
 It currently uses lazy initialization, a brute-force enumeration of
 all heap objects that can bind to the structured inputs accessed by
-the program. This explicit enumeration may lead to a huge amount of
-false alarms.
+the program. This explicit enumeration may lead to path explosion, a
+huge amount of false alarms and a lot of memory and time wasted for
+nothing.
 
 In this project, we tried to explore an alternative way of
 representing constraints over the heap. This would allow SPF to avoid
@@ -82,9 +83,9 @@ symbolic.seplogic.precondition = seplogic.TestNoncyclic.length_noncyclic#0->Tree
 search.depth_limit = 10
 #+END_SRC
 
-This configuration file is basically an extended key-value file (see
-the full description [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/config#SpecialPropertySyntax][here in JPF's documentation]]). Important generic
-options are:
+This configuration file is an extended key-value file (see the full
+description [[https://babelfish.arc.nasa.gov/trac/jpf/wiki/user/config#SpecialPropertySyntax][here in JPF's documentation]]). Important generic options
+are:
 - =target= that points to the =.class= file we are interested in;
 - =symbolic.debug= that enables the debugging of SPF;
 - =search.multiple_errors= that tells JPF to keep going when
@@ -146,7 +147,7 @@ syntax) cannot be implemented:
 #+BEGIN_SRC cyclist
 BinTreeSeg {
   x=y => BinTreeSeg(x,y) |
-  x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) | 
+  x->x',y' * BinTreeSeg(x',y) * BinTree(y') => BinTreeSeg(x,y) |
   x->x',y' * BinTree(x') * BinTreeSeg(y',y) => BinTreeSeg(x,y)
 } ;
 #+END_SRC
@@ -187,9 +188,9 @@ two features unsupported by most separation logic provers:
 
 Having to handle the two by ourselves led to the creation of a more
 subtle data-structure that would make efficient these two
-operations. These structure was basically a union-find structure (for
-an efficient handling of aliases) where the representant of each
-equivalence class would carry the information/s that we have on it.
+operations. This structure is a union-find structure (for an efficient
+handling of aliases) where the representant of each equivalence class
+carry the information that we have on it.
 
 In fact, once this structure exists, there is not much to add to
 obtain a full separation logic prover. In addition, keeping the prover
@@ -198,17 +199,17 @@ inside SPF had a few other advantages:
   spawning of an external process;
 - the symbolic engine already takes care of a part of what we need,
   making the SL-prover much easier to write;
-- and the check for unsatisfiability can be checked incrementally
-  while we update the structure, allowing an important speedup.
+- the check for unsatisfiability can be checked incrementally while we
+  update the structure, allowing an important speedup.
 
 For this reason, we decided to forget about sending the constraints to
 external provers and to have it in SPF.
 
-** In practise
+** In practice
 
 The tool that is present in this repository is a modification of SPF
 in which:
-- some symbolic JVM instructions have been override (see
+- some symbolic JVM instructions have been overriden (see
   =bytecode/seplogic= the =SymbolicInstructionFactory= as well as
   =heap/seplogic/Helper=),
 - specific =HeapChoiceGenerator= and =PathCondition= have been written (in
@@ -216,10 +217,9 @@ in which:
 - and more importantly, a constraint structure has been implemented
   (in =heap/seplogic/constraint=).
 
-This constraint structure is basically an efficiently-written
-union-find structure on =SymbolicInteger= (think of it as the variables
-in SPF). It also carries an information for each equivalence class
-that can be:
+This constraint structure is an efficiently-written union-find
+structure on =SymbolicInteger= (think of it as the variables in SPF). It
+also carries an information for each equivalence class that can be:
 - that they are =nil=,
 - that they point to a record, and the fields of the records
   (represented as other nodes of the structure directly, for the sake
@@ -238,44 +238,43 @@ raise an =UnsatException=. They are:
 
 - the =union= operation of the union-find that takes two nodes and
   merges their equivalence classes. This corresponds to adding an
-  equality between two variables. This merging operation also checks
-  that the merging is allowing -- that is, that there is no
-  disequality about those two equivalence classes. Finally, it also
-  merges the informations carried by the nodes, which is where
-  everything subtle happens.
+  equality between two variables. This merge operation also checks
+  that the merge is allowing -- that is, that there is no disequality
+  about those two equivalence classes. Finally, it also merges the
+  information carried by the nodes, which is where everything subtle
+  happens.
 
-- the adding of some information about a node. This also triggers a
-  merge of this information with the information that are already
+- the addition of some information to a node. This also triggers a
+  merge of this information with the information that is already
   there.
 
-- the update of the information of a record. This is much easier than
-  in a standard SL prover. In a standard SL prover, there is a phase
-  of rearrangement that makes sure that this field update will make
-  sense (that is, there is indeed a record onto which this variable
-  points containing the right field). In our case, and since we are
-  working with a symbolic engine that already has to find that out,
-  there is no need.
+- the update of a record information. This is much easier than in a
+  standard SL prover. In a standard SL prover, there is a phase of
+  rearrangement that makes sure that this field update will make sense
+  (that is, there is indeed a record onto which this variable points
+  containing the right field). In our case, and since we are working
+  with a symbolic engine that already checked that, there is no need.
 
-*** The merging of informations
+*** The merge of information
 
-The merging of two informations is where we really check the
+The merge of two information is where we really check the
 unsatisfiability of a formula. Some things are trivial to merge (=nil=
 with =nil= is =nil=, =nil= with a record is unsatisfiable, ...) and some are
 more difficult.
 
-For instance, merging two records is something quite important. We
-build a record whose fields will be the union of the fields of the two
-records to merge. Whenever a field is present in both the records, we
-trigger a =union= of the nodes they contain, which may eventually lead
-to an =UnsatException=.
+For instance, merging two records is something important. We build a
+record whose fields will be the union of the fields of the two records
+to merge. Whenever a field is present in both the records, we trigger
+a =union= of the nodes they contain, which may eventually lead to an
+=UnsatException=.
 
-Everything becomes more subtle as soon as there are predicates. The
-merging of two predicates is quite harmless: we keep them
-both. However, as soon as we know something else about the node, we
-need to unfold the predicate/s, and see which branch of the unfolding
-makes sense. For now, there may be only one.
+Everything becomes more complex as soon as there are predicates. The
+merge of two predicates is quite harmless: we keep them both. However,
+as soon as we know something else about the node, we need to unfold
+the predicate/s, and see which branch of the unfolding makes
+sense. For now, there may be only one.
 
-In the code, all these "informations" extend the abstract class
+In the code, all these "information" extend the abstract class
 =heap/seplogic/Information=. The predicates extend the abstract class
 =heap/seplogic/Predicate= (which is, itself, extending
 =Information=). They have to provide a =unify= function that takes the
@@ -283,7 +282,7 @@ other information and deals with the merge.
 
 When unifying a predicate with an other information, the only
 important cases are the case of =nil= and the case of a record, which
-makes predicates kind of easy to write.
+makes predicates easy to write.
 
 *** Efficiency
 
@@ -318,7 +317,7 @@ Although the tool seems quite efficient as it is, there is still a lot
 of room for improvement. In particular:
 
 - It would be nice to have a way to support non-separated variable, as
-  it is sometimes wanted. 
+  it is sometimes wanted.
 
 - We would like to make SPF branch from the SL structure. That would
   allow the predicates to be written in an easier way (and maybe even
@@ -331,6 +330,6 @@ of room for improvement. In particular:
 
 - We would like SPF to carry enough information on the concrete nodes
   to have more precise constraints. For now, the constraint looses a
-  lot of precision each time it have to handle a =PUTFIELD=, as we
+  lot of precision each time it hash to handle a =PUTFIELD=, as we
   cannot determine what has been put in the field (and we can only
   create a fresh variable).
